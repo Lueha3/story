@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="인스타 스토리에 올린 꿀템을 카테고리별로 모아보는 곳">
+<title>실시간 꿀템 리딩방</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="/app.css">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+[hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top gut">
+    <div class="who">
+      <div class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+      </div>
+      <div class="who-t">
+        <h1>실시간 꿀템 리딩방</h1>
+        <span id="handle"></span>
+      </div>
+      <a class="pill" id="igLink" href="https://www.instagram.com/" target="_blank" rel="noopener" hidden>
+        <span>인스타그램
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 17 17 7"></path><path d="M7 7h10v10"></path></svg>
+        </span>
+      </a>
+    </div>
+    <p class="status"><i aria-hidden="true"></i><span id="statusText">불러오는 중이에요</span></p>
+  </header>
+
+  <div id="tabsAnchor"></div>
+  <nav class="tabs" aria-label="카테고리">
+    <div class="tabs-list" id="tabsList"></div>
+  </nav>
+
+  <main id="feed"><p class="loading gut">스토리를 불러오는 중이에요.</p></main>
+
+  <footer class="foot gut">
+    <p>상품링크는 제휴 링크예요. 링크로 구매하시면 제가 수수료를 받을 수 있어요.</p>
+    <p>가격과 할인율은 스토리를 올린 시점 기준이라 지금과 다를 수 있어요.</p>
+  </footer>
+</div>
+
+<div class="viewer" id="viewer" role="dialog" aria-modal="true" aria-label="스토리 보기" hidden>
+  <div class="v-stage">
+    <div class="card v-card" id="vCard">
+      <img id="vImg" alt="">
+      <div class="v-shade" aria-hidden="true"></div>
+      <button type="button" class="v-zone v-prev" id="vPrev" aria-label="이전 스토리"></button>
+      <button type="button" class="v-zone v-next" id="vNext" aria-label="다음 스토리"></button>
+      <div class="v-top">
+        <div class="v-segs" id="vSegs" aria-hidden="true"></div>
+        <div class="v-head">
+          <span class="v-ava" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </span>
+          <b id="vHandle"></b>
+          <time id="vTime"></time>
+          <span class="sp"></span>
+          <button type="button" class="v-close" id="vClose" data-notap aria-label="닫기">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
+          </button>
+        </div>
+      </div>
+      <div class="v-flag" id="vFlag" aria-hidden="true"></div>
+    </div>
+  </div>
+  <div class="v-bar">
+    <a class="cta" id="vCta" href="#" target="_blank" rel="noopener sponsored">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+      <span>상품 보러가기</span>
+    </a>
+    <span class="v-nolink" id="vNoLink" hidden>링크가 없는 스토리예요</span>
+    <button type="button" class="share" id="vShare" aria-label="이 스토리 주소 복사">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"></path><path d="M16 6l-4-4-4 4"></path><path d="M12 2v13"></path></svg>
+    </button>
+  </div>
+  <div class="v-info"><span id="vWhen"></span><span id="vPos"></span></div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+<script src="/app.js"></script>
+</body>
+</html>
