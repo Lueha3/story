@@ -311,15 +311,6 @@
   $('vNext').addEventListener('click', (e) => { if (e.detail === 0) step(1); });
   vClose.addEventListener('click', closeViewer);
   vCta.addEventListener('click', () => { paused = true; setTimeout(() => { paused = false; }, 1500); });
-  $('vShare').addEventListener('click', async () => {
-    const url = location.origin + '/#s-' + seq[pos].id;
-    try {
-      await navigator.clipboard.writeText(url);
-      say('이 스토리 주소를 복사했어요');
-    } catch (e) {
-      say(url);
-    }
-  });
   document.addEventListener('keydown', (e) => {
     if (viewer.hidden) return;
     if (e.key === 'Escape') closeViewer();
