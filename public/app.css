@@ -1120,3 +1120,16 @@ body {
 .v-close:focus:not(:focus-visible) {
   outline: none;
 }
+
+/* profile photo */
+.avatar,
+.v-ava {
+  overflow: hidden;
+}
+.avatar img,
+.v-ava img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

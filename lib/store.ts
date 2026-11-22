@@ -14,6 +14,9 @@ export interface Store {
   updateStory(id: string, patch: Partial<Story>): Promise<Story | null>;
   deleteStory(id: string): Promise<void>;
 
+  getSetting(key: string): Promise<string | null>;
+  setSetting(key: string, value: string): Promise<void>;
+
   listLinks(): Promise<QueuedLink[]>;
   insertLink(link: QueuedLink): Promise<void>;
   updateLink(id: string, patch: Partial<QueuedLink>): Promise<void>;

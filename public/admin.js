@@ -209,6 +209,29 @@
   }
 
   // The button opens the photo picker; choosing photos starts the upload right away.
+  function showAvatar(url) {
+    $('avatarNow').innerHTML = url ? '<img src="' + esc(url) + '" alt="">' : '';
+  }
+  fetch('/api/stories', { cache: 'no-store' }).then((r) => r.json()).then((d) => showAvatar(d.avatar)).catch(() => {});
+  $('avatarBtn').addEventListener('click', () => { $('avatarFile').click(); });
+  $('avatarFile').addEventListener('change', async () => {
+    const f = $('avatarFile').files && $('avatarFile').files[0];
+    if (!f) return;
+    $('avatarBtn').disabled = true;
+    $('avatarMsg').textContent = '올리는 중이에요.';
+    try {
+      const fd = new FormData();
+      fd.append('file', await shrink(f), 'avatar.jpg');
+      const d = await api('/api/admin/avatar', { method: 'POST', body: fd });
+      showAvatar(d.avatar);
+      $('avatarMsg').textContent = '프로필 사진을 바꿨어요. 사이트에는 1분 안에 반영돼요.';
+    } catch (err) {
+      $('avatarMsg').textContent = err.message;
+    }
+    $('avatarFile').value = '';
+    $('avatarBtn').disabled = false;
+  });
+
   $('upload').addEventListener('click', () => { $('files').click(); });
   $('files').addEventListener('change', async () => {
     const files = Array.from($('files').files || []);

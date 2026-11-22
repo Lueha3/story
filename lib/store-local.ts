@@ -11,6 +11,7 @@ export const IMAGE_DIR = path.join(DIR, "images");
 interface Db {
   stories: Story[];
   links: QueuedLink[];
+  settings?: Record<string, string>;
 }
 
 let queue: Promise<unknown> = Promise.resolve();
@@ -64,6 +65,13 @@ export function createLocalStore(): Store {
         db.links.forEach((l) => {
           if (l.storyId === id) l.storyId = null;
         });
+        await save(db);
+      }),
+    getSetting: (key) => locked(async () => (await load()).settings?.[key] ?? null),
+    setSetting: (key, value) =>
+      locked(async () => {
+        const db = await load();
+        db.settings = { ...(db.settings ?? {}), [key]: value };
         await save(db);
       }),
     listLinks: () => locked(async () => (await load()).links),

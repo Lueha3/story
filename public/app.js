@@ -17,6 +17,7 @@
   // ---- data ----
   let STORIES = [];
   let handle = '';
+  let avatar = '';
   const byId = {};
 
   // Dates are shown in Korea time whatever the visitor's phone is set to.
@@ -48,6 +49,7 @@
     if (!res.ok) throw new Error('HTTP ' + res.status);
     const data = await res.json();
     handle = data.instagram || '';
+    avatar = data.avatar || '';
     STORIES = data.stories.map((s) => decorate({ ...s, cat: s.category }));
     STORIES.forEach((s) => { byId[s.id] = s; });
   }
@@ -117,6 +119,11 @@
     if (chip) tabsList.scrollTo({ left: Math.max(0, chip.offsetLeft - 16), behavior: reduce ? 'auto' : 'smooth' });
   }
   function updateHeader() {
+    if (avatar) {
+      document.querySelectorAll('.avatar, .v-ava').forEach((el) => {
+        if (el.dataset.src !== avatar) { el.dataset.src = avatar; el.innerHTML = '<img src="' + esc(avatar) + '" alt="">'; }
+      });
+    }
     $('handle').textContent = handle ? '@' + handle : '';
     $('vHandle').textContent = handle ? '@' + handle : '';
     if (!STORIES.length) {

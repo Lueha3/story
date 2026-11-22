@@ -119,6 +119,7 @@ export function createVercelStore(databaseUrl: string): Store {
         )`;
         await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS link_box text`;
         await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS sticker_checked boolean NOT NULL DEFAULT false`;
+        await sql`CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, value text NOT NULL)`;
         await sql`CREATE TABLE IF NOT EXISTS links (
           id text PRIMARY KEY,
           url text NOT NULL,
@@ -180,6 +181,16 @@ export function createVercelStore(databaseUrl: string): Store {
       await init();
       await sql`DELETE FROM stories WHERE id = ${id}`;
       await sql`UPDATE links SET story_id = NULL WHERE story_id = ${id}`;
+    },
+    async getSetting(key) {
+      await init();
+      const rows = (await sql`SELECT value FROM settings WHERE key = ${key}`) as Row[];
+      return rows[0] ? String(rows[0].value) : null;
+    },
+    async setSetting(key, value) {
+      await init();
+      await sql`INSERT INTO settings (key, value) VALUES (${key}, ${value})
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`;
     },
     async listLinks() {
       await init();
