@@ -174,6 +174,8 @@
     fill = vSegs.children[at] ? vSegs.children[at].firstChild : null;
     $('vTime').textContent = s.md + ' ' + s.clock;
     vCta.hidden = !s.link;
+    // no link: nothing at all over the bottom of the story, not even the shading
+    document.querySelector('.v-bottom').hidden = !s.link;
     if (s.link) vCta.href = s.link;
     // load the next picture early so tapping on feels instant
     if (seq[pos + 1]) { const pre = new Image(); pre.src = seq[pos + 1].imageUrl; }
