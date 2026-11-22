@@ -1,4 +1,5 @@
 import { createHash, randomBytes } from "crypto";
+import sharp from "sharp";
 import { classifyStory, type ImageType } from "./classify";
 import { getStore } from "./store";
 import type { QueuedLink, Story } from "./types";
@@ -42,11 +43,34 @@ export type IngestResult =
   | { kind: "duplicate"; story: Story }
   | { kind: "created"; story: Story };
 
-export async function ingestStory(image: Buffer, type: ImageType, takenAt: Date | null): Promise<IngestResult> {
-  const store = await getStore();
-  const hash = createHash("sha256").update(image).digest("hex");
-  const existing = await store.findByHash(hash);
+/**
+ * Turns any accepted picture into a JPEG no larger than 1920px on its long side:
+ * small enough to store cheaply and to send to the AI, still sharp on a phone.
+ */
+export async function normalizeImage(input: Buffer): Promise<Buffer> {
+  return sharp(input, { failOn: "none" })
+    .rotate()
+    .resize({ width: 1920, height: 1920, fit: "inside", withoutEnlargement: true })
+    .jpeg({ quality: 85, mozjpeg: true })
+    .toBuffer();
+}
+
+export async function ingestStory(original: Buffer, originalType: ImageType, takenAt: Date | null): Promise<IngestResult> {
+  const store = await step("데이터베이스 연결", () => getStore());
+  // The hash is taken from the file as sent, so the shortcut resending the same photo is recognised.
+  const hash = createHash("sha256").update(original).digest("hex");
+  const existing = await step("기록 확인", () => store.findByHash(hash));
   if (existing) return { kind: "duplicate", story: existing };
+
+  let image = original;
+  let type = originalType;
+  try {
+    image = await normalizeImage(original);
+    type = "image/jpeg";
+  } catch (err) {
+    // An image sharp can't read is kept as sent; the size check before this keeps it within limits.
+    console.error("normalizeImage failed", err);
+  }
 
   const now = new Date();
   // A creation time far in the future or before Instagram existed is a broken value: use now.

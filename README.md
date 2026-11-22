@@ -42,6 +42,8 @@ AI가 이미지를 읽고 카테고리·상품 이름·가격을 알아서 채�
    | `CLASSIFY_EFFORT` | 선택. `low`~`max`, 비우면 `low` |
 
 4. Redeploy 하면 끝이에요. 표는 처음 요청이 올 때 자동으로 만들어져요.
+5. `/admin`에 들어가면 맨 위 '연결 상태'에 데이터베이스, 이미지 저장소, AI 키가 모두 '연결됨'인지 나와요.
+   Storage를 연결할 때 이름 앞에 붙는 글자(예: `STORAGE_`)를 바꿔도 알아서 찾아요.
 
 > AI 사용료는 스토리 한 장마다 들어요. 기본값(Opus 5.5, 낮음)은 하루 30장에 한 달 20~25달러 정도로 예상해요(추정치).
 > 더 아끼려면 `CLASSIFY_MODEL=claude-haiku-5-5`, `CLASSIFY_EFFORT=high`로 바꿔요(한 달 1~2달러, 정확도는 직접 확인 필요).
@@ -56,8 +58,9 @@ AI가 이미지를 읽고 카테고리·상품 이름·가격을 알아서 채�
 
 1. **사진 찾기**: 앨범이 `Instagram`, 정렬 '생성일' 최신순, 개수 제한 10
 2. **반복 (각 항목)**:
-   1. **이미지 변환**: JPEG로
-   2. **URL의 콘텐츠 가져오기**
+   1. **이미지 크기 조절**: 높이 1920 (가로는 자동). Vercel은 4.5MB가 넘는 요청을 받지 않아요.
+   2. **이미지 변환**: JPEG로
+   3. **URL의 콘텐츠 가져오기**
       - URL `https://내주소/api/ingest`, 방법 POST
       - 헤더 `Authorization` = `Bearer 비밀번호`
       - 본문 '양식': `file` = 변환된 이미지(파일), `takenAt` = 반복 항목의 '생성일'
@@ -81,7 +84,8 @@ npm install
 ADMIN_TOKEN=test-token-123456 npm run dev
 ```
 
-`DATABASE_URL`이 없으면 `.data/` 폴더에 저장해요. `ANTHROPIC_API_KEY`가 없으면 자동 분류 없이 '분류 실패'로 들어가요.
+`DATABASE_URL`이 없으면 `.data/` 폴더에 저장해요(Vercel에서는 이렇게 동작하지 않고 연결하라는 오류를 보여줘요).
+올린 사진은 서버가 긴 변 1920px JPEG로 줄여서 저장해요. `ANTHROPIC_API_KEY`가 없으면 자동 분류 없이 '분류 실패'로 들어가요.
 
 ## API
 

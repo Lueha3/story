@@ -85,16 +85,36 @@
     render();
   }
 
+  async function checkHealth() {
+    const h = await api('/api/admin/health');
+    const items = [
+      ['데이터베이스', h.database],
+      ['이미지 저장소', h.imageStorage],
+      ['AI 키', h.ai],
+      ['인스타 아이디', h.instagram],
+    ];
+    $('health').innerHTML = items.map((it) => '<li><span>' + it[0] + '</span><span class="' + (it[1] ? 'ok">연결됨' : 'bad">연결 안 됨') + '</span></li>').join('') +
+      '<li><span>분류 모델</span><span class="ok">' + esc(h.model) + ' · ' + esc(h.effort) + '</span></li>';
+    const fixes = [];
+    if (!h.database) fixes.push(h.databaseError || '데이터베이스를 연결해 주세요.');
+    if (!h.imageStorage) fixes.push('이미지 저장소가 연결되지 않았어요. Vercel › Storage에서 Blob을 이 프로젝트에 연결하고 다시 배포해 주세요.');
+    if (!h.ai) fixes.push('AI 키가 없어요. Vercel 환경변수에 ANTHROPIC_API_KEY를 넣고 다시 배포해 주세요.');
+    $('healthMsg').textContent = fixes.join('\n');
+    return h;
+  }
+
   async function login() {
     $('loginMsg').textContent = '';
     try {
-      await reload();
-      try { localStorage.setItem(KEY, token); } catch (e) { /* storage blocked */ }
-      $('loginBox').hidden = true;
-      $('work').hidden = false;
+      await checkHealth();
     } catch (e) {
       $('loginMsg').textContent = e.message;
+      return;
     }
+    try { localStorage.setItem(KEY, token); } catch (e) { /* storage blocked */ }
+    $('loginBox').hidden = true;
+    $('work').hidden = false;
+    reload().catch((e) => { $('list').innerHTML = '<p class="empty">' + esc(e.message) + '</p>'; });
   }
 
   $('showToken').addEventListener('click', () => {
@@ -198,6 +218,11 @@
       fd.append('file', await shrink(files[i]), files[i].name.replace(/\.[^.]+$/, '') + '.jpg');
       fd.append('takenAt', new Date(files[i].lastModified || Date.now()).toISOString());
       try {
+        const body = fd.get('file');
+        if (body && body.size > 4.3 * 1024 * 1024) {
+          lines.push(files[i].name + ': 이 브라우저에서 사진을 줄이지 못했어요. 아이폰 Safari에서 올려주세요.');
+          continue;
+        }
         const d = await api('/api/ingest', { method: 'POST', body: fd });
         const r = d.results[0];
         if (r.error) lines.push(files[i].name + ': ' + r.error);

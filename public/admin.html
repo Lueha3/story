@@ -31,6 +31,10 @@
 .reg-l input { height: 38px !important; font-size: 13px !important; }
 .danger > span { border-color: #d0485e; color: #e0566c; }
 .is-hidden .reg-thumb { opacity: 0.45; }
+.health { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 13px; line-height: 1.5; }
+.health li { display: flex; justify-content: space-between; gap: 12px; }
+.health .ok { color: var(--fg-2); }
+.health .bad { color: #e0566c; font-weight: 700; }
 </style>
 </head>
 <body>
@@ -51,6 +55,12 @@
 
     <div id="work" hidden>
       <div class="adm" style="padding:0">
+        <section class="box" id="healthBox">
+          <h2>연결 상태</h2>
+          <ul class="health" id="health"></ul>
+          <p class="msg" id="healthMsg"></p>
+        </section>
+
         <section class="box">
           <h2>스토리 직접 올리기</h2>
           <input type="file" id="files" accept="image/jpeg,image/png,image/webp" multiple aria-label="스토리 이미지 선택">

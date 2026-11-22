@@ -4,7 +4,9 @@ import { ingestStory, sniffImage } from "@/lib/stories";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
-const MAX_BYTES = 4 * 1024 * 1024;
+// Large photos are shrunk on the server before saving. (Vercel itself refuses a request over about 4.5MB,
+// so the admin page shrinks pictures before sending and the phone shortcut resizes them first.)
+const MAX_BYTES = 25 * 1024 * 1024;
 
 /**
  * The phone shortcut (or the admin page) sends story images here.
@@ -29,7 +31,7 @@ export async function POST(req: Request) {
     const f = files[i];
     const buf = Buffer.from(await f.arrayBuffer());
     if (buf.length > MAX_BYTES) {
-      results.push({ name: f.name, error: "이미지가 4MB보다 커요." });
+      results.push({ name: f.name, error: "이미지가 25MB보다 커요." });
       continue;
     }
     const type = sniffImage(buf);

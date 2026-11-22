@@ -1,5 +1,6 @@
 import { neon } from "@neondatabase/serverless";
 import { del, put } from "@vercel/blob";
+import { blobToken } from "./env";
 import type { Store } from "./store";
 import type { Category, QueuedLink, Story, StoryStatus } from "./types";
 
@@ -63,8 +64,11 @@ const LINK_COLS: Record<keyof QueuedLink, string> = {
   storyId: "story_id",
 };
 
-export function createVercelStore(): Store {
-  const sql = neon(process.env.DATABASE_URL as string);
+const NO_BLOB =
+  "이미지 저장소가 연결되지 않았어요. Vercel › Storage에서 Blob을 이 프로젝트에 연결하고 다시 배포해 주세요.";
+
+export function createVercelStore(databaseUrl: string): Store {
+  const sql = neon(databaseUrl);
   let ready: Promise<unknown> | null = null;
 
   function init() {
@@ -161,11 +165,14 @@ export function createVercelStore(): Store {
       await patchRow("links", LINK_COLS, id, patch as Record<string, unknown>);
     },
     async putImage(name, data, contentType) {
-      const blob = await put("stories/" + name, data, { access: "public", contentType, addRandomSuffix: false });
+      const token = blobToken();
+      if (!token) throw new Error(NO_BLOB);
+      const blob = await put("stories/" + name, data, { access: "public", contentType, addRandomSuffix: false, token });
       return blob.url;
     },
     async deleteImage(url) {
-      await del(url);
+      const token = blobToken();
+      if (token) await del(url, { token });
     },
   };
 }
