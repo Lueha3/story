@@ -25,7 +25,7 @@
 
   async function api(path, opts) {
     const o = opts || {};
-    const headers = Object.assign({ Authorization: 'Bearer ' + token }, o.headers || {});
+    const headers = Object.assign({ Authorization: 'Bearer ' + encodeURIComponent(token) }, o.headers || {});
     const res = await fetch(path, Object.assign({}, o, { headers: headers }));
     let data = null;
     try { data = await res.json(); } catch (e) { /* empty body */ }
@@ -97,6 +97,13 @@
     }
   }
 
+  $('showToken').addEventListener('click', () => {
+    const f = $('token');
+    const show = f.type === 'password';
+    f.type = show ? 'text' : 'password';
+    $('showToken').setAttribute('aria-pressed', String(show));
+    $('showToken').querySelector('span').textContent = show ? '가리기' : '보기';
+  });
   $('saveToken').addEventListener('click', () => {
     token = $('token').value.trim();
     login();

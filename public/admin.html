@@ -41,10 +41,11 @@
     <section class="box" id="loginBox">
       <h2>비밀번호</h2>
       <div class="row">
-        <input type="password" id="token" autocomplete="current-password" aria-label="관리 비밀번호">
+        <input type="password" id="token" autocomplete="current-password" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="관리 비밀번호">
+        <button type="button" class="pill" id="showToken" aria-pressed="false"><span>보기</span></button>
         <button type="button" class="pill solid" id="saveToken"><span>확인</span></button>
       </div>
-      <p class="hint">서버에 넣은 ADMIN_TOKEN 값이에요. 이 기기에만 저장돼요.</p>
+      <p class="hint">서버에 넣은 ADMIN_TOKEN 값이에요. 대소문자를 구분해요. 이 기기에만 저장돼요.</p>
       <p class="msg" id="loginMsg"></p>
     </section>
 
