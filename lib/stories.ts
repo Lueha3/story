@@ -2,7 +2,8 @@ import { createHash, randomBytes } from "crypto";
 import sharp from "sharp";
 import { classifyStory, type ImageType } from "./classify";
 import { getStore } from "./store";
-import type { QueuedLink, Story } from "./types";
+import type { Store } from "./store";
+import type { LinkBox, QueuedLink, Story } from "./types";
 
 const MIN = 60 * 1000;
 // A link waits up to this long for the story it belongs to.
@@ -119,7 +120,10 @@ export async function ingestStory(original: Buffer, originalType: ImageType, tak
   await attachWaitingLink(story);
 
   const c = await classifyStory(image, type);
+  let cleanUrl: string | undefined;
+  if (c.linkBox) cleanUrl = await swapForErased(store, id, imageUrl, image, c.linkBox);
   const updated = await store.updateStory(id, {
+    ...(cleanUrl ? { imageUrl: cleanUrl } : {}),
     category: c.category,
     itemName: c.itemName,
     priceText: c.priceText,
@@ -194,8 +198,9 @@ export async function locateStickers(limit: number): Promise<{ done: number; fou
   const batch = todo.slice(0, limit);
   for (const s of batch) {
     let box = null;
+    let img: Buffer | null = null;
     try {
-      const img = await store.getImage(s.imageUrl);
+      img = await store.getImage(s.imageUrl);
       const c = await classifyStory(img, sniffImage(img) ?? "image/jpeg");
       if (!c.ok) continue;
       box = c.linkBox;
@@ -204,7 +209,63 @@ export async function locateStickers(limit: number): Promise<{ done: number; fou
       continue;
     }
     if (box) found += 1;
-    await store.updateStory(s.id, { linkBox: box, stickerChecked: true });
+    let cleanUrl: string | undefined;
+    if (box && img) cleanUrl = await swapForErased(store, s.id, s.imageUrl, img, box);
+    await store.updateStory(s.id, { linkBox: box, stickerChecked: true, ...(cleanUrl ? { imageUrl: cleanUrl } : {}) });
   }
   return { done: batch.length, found, left: todo.length - batch.length };
+}
+
+/**
+ * Paints over the link sticker with the colour of the background around it.
+ * The colour is the median of a thin ring just outside the sticker, so a neighbouring
+ * white box touching one side does not tint it.
+ */
+export async function eraseSticker(image: Buffer, box: LinkBox): Promise<Buffer> {
+  const { data, info } = await sharp(image, { failOn: "none" }).removeAlpha().raw().toBuffer({ resolveWithObject: true });
+  const W = info.width;
+  const H = info.height;
+  const padX = box.w * W * 0.03;
+  const padY = box.h * H * 0.06;
+  const x0 = Math.max(0, Math.floor(box.x * W - padX));
+  const y0 = Math.max(0, Math.floor(box.y * H - padY));
+  const x1 = Math.min(W, Math.ceil((box.x + box.w) * W + padX));
+  const y1 = Math.min(H, Math.ceil((box.y + box.h) * H + padY));
+  const ring = 5;
+  const rs: number[] = [];
+  const gs: number[] = [];
+  const bs: number[] = [];
+  for (let y = Math.max(0, y0 - ring); y < Math.min(H, y1 + ring); y += 1) {
+    for (let x = Math.max(0, x0 - ring); x < Math.min(W, x1 + ring); x += 1) {
+      if (x >= x0 && x < x1 && y >= y0 && y < y1) continue;
+      const i = (y * W + x) * 3;
+      rs.push(data[i]);
+      gs.push(data[i + 1]);
+      bs.push(data[i + 2]);
+    }
+  }
+  if (!rs.length) return image;
+  const med = (a: number[]) => a.sort((p, q) => p - q)[a.length >> 1];
+  const fill = `rgb(${med(rs)},${med(gs)},${med(bs)})`;
+  const w = x1 - x0;
+  const h = y1 - y0;
+  const m = 3; // soft edge so the patch melts into the background
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w + m * 4}" height="${h + m * 4}"><defs><filter id="f" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="${m / 2}"/></filter></defs><rect x="${m * 2}" y="${m * 2}" width="${w}" height="${h}" rx="${Math.round(h * 0.3)}" fill="${fill}" filter="url(#f)"/><rect x="${m * 2 + 2}" y="${m * 2 + 2}" width="${w - 4}" height="${h - 4}" rx="${Math.round(h * 0.3)}" fill="${fill}"/></svg>`;
+  return sharp(image, { failOn: "none" })
+    .composite([{ input: Buffer.from(svg), left: Math.max(0, x0 - m * 2), top: Math.max(0, y0 - m * 2) }])
+    .jpeg({ quality: 88, mozjpeg: true })
+    .toBuffer();
+}
+
+/** Saves the sticker-free picture under a new name and removes the old file. Returns the new address, or nothing on failure. */
+async function swapForErased(store: Store, id: string, oldUrl: string, image: Buffer, box: LinkBox): Promise<string | undefined> {
+  try {
+    const clean = await eraseSticker(image, box);
+    const url = await store.putImage(id + "-c" + randomBytes(3).toString("hex") + ".jpg", clean, "image/jpeg");
+    await store.deleteImage(oldUrl).catch(() => undefined);
+    return url;
+  } catch (err) {
+    console.error("eraseSticker failed for " + id, err);
+    return undefined;
+  }
 }
