@@ -12,9 +12,9 @@ export function isOwner(req: Request): boolean {
 }
 
 export function unauthorized() {
-  const configured = (process.env.ADMIN_TOKEN || "").length >= 12;
-  return Response.json(
-    { error: configured ? "비밀번호가 맞지 않아요." : "서버에 ADMIN_TOKEN(12자 이상)이 설정되지 않았어요." },
-    { status: 401 },
-  );
+  const secret = process.env.ADMIN_TOKEN;
+  let error = "비밀번호가 맞지 않아요.";
+  if (secret === undefined) error = "서버에서 ADMIN_TOKEN을 찾지 못했어요. 이름 철자와 Production 체크를 확인하고 다시 배포해 주세요.";
+  else if (secret.length < 12) error = "서버의 ADMIN_TOKEN이 " + secret.length + "자예요. 12자 이상으로 바꾸고 다시 배포해 주세요.";
+  return Response.json({ error }, { status: 401 });
 }
