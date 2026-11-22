@@ -173,10 +173,7 @@
     vSegs.innerHTML = segs;
     fill = vSegs.children[at] ? vSegs.children[at].firstChild : null;
     $('vTime').textContent = s.md + ' ' + s.clock;
-    $('vWhen').textContent = CAT_LABEL[s.cat] + ' · ' + s.full;
-    $('vPos').textContent = (at + 1) + ' / ' + len;
     vCta.hidden = !s.link;
-    $('vNoLink').hidden = !!s.link;
     if (s.link) vCta.href = s.link;
     // load the next picture early so tapping on feels instant
     if (seq[pos + 1]) { const pre = new Image(); pre.src = seq[pos + 1].imageUrl; }
