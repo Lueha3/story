@@ -1,6 +1,6 @@
 import { neon } from "@neondatabase/serverless";
-import { del, put } from "@vercel/blob";
-import { blobToken } from "./env";
+import { del, get, put } from "@vercel/blob";
+import { blobConfigured, blobStoreId, blobToken } from "./env";
 import type { Store } from "./store";
 import type { Category, QueuedLink, Story, StoryStatus } from "./types";
 
@@ -66,6 +66,19 @@ const LINK_COLS: Record<keyof QueuedLink, string> = {
 
 const NO_BLOB =
   "이미지 저장소가 연결되지 않았어요. Vercel › Storage에서 Blob을 이 프로젝트에 연결하고 다시 배포해 주세요.";
+
+/** A token if the store has one; otherwise the store id, and the SDK signs with Vercel's own OIDC token. */
+function blobAuth(): { token?: string; storeId?: string } {
+  const token = blobToken();
+  const storeId = blobStoreId();
+  return storeId ? { storeId, ...(token ? { token } : {}) } : { token };
+}
+
+/** Reads a picture saved in a private store, for /api/image. */
+export async function readPrivateImage(name: string) {
+  const r = await get("stories/" + name, { access: "private", ...blobAuth() });
+  return r && r.statusCode === 200 ? r : null;
+}
 
 export function createVercelStore(databaseUrl: string): Store {
   const sql = neon(databaseUrl);
@@ -165,14 +178,25 @@ export function createVercelStore(databaseUrl: string): Store {
       await patchRow("links", LINK_COLS, id, patch as Record<string, unknown>);
     },
     async putImage(name, data, contentType) {
-      const token = blobToken();
-      if (!token) throw new Error(NO_BLOB);
-      const blob = await put("stories/" + name, data, { access: "public", contentType, addRandomSuffix: false, token });
-      return blob.url;
+      if (!blobConfigured()) throw new Error(NO_BLOB);
+      const opts = { contentType, addRandomSuffix: false, ...blobAuth() };
+      // A private store (the default for new stores) is served through /api/image; a public one directly.
+      try {
+        await put("stories/" + name, data, { ...opts, access: "private" });
+        return "/api/image/" + name;
+      } catch (privateErr) {
+        try {
+          const blob = await put("stories/" + name, data, { ...opts, access: "public" });
+          return blob.url;
+        } catch {
+          throw privateErr;
+        }
+      }
     },
     async deleteImage(url) {
-      const token = blobToken();
-      if (token) await del(url, { token });
+      if (!blobConfigured()) return;
+      const target = url.startsWith("/api/image/") ? "stories/" + url.slice("/api/image/".length) : url;
+      await del(target, blobAuth());
     },
   };
 }

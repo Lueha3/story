@@ -1,5 +1,5 @@
 import { isOwner, unauthorized } from "@/lib/auth";
-import { blobToken, databaseUrl, onVercel } from "@/lib/env";
+import { blobConfigured, databaseUrl, onVercel } from "@/lib/env";
 import { getStore } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -19,7 +19,7 @@ export async function GET(req: Request) {
     database,
     databaseError,
     databaseMode: databaseUrl() ? "postgres" : onVercel() ? "none" : "local",
-    imageStorage: databaseUrl() ? Boolean(blobToken()) : !onVercel(),
+    imageStorage: databaseUrl() ? blobConfigured() : !onVercel(),
     ai: Boolean(process.env.ANTHROPIC_API_KEY),
     model: process.env.CLASSIFY_MODEL || "claude-opus-5-5",
     effort: process.env.CLASSIFY_EFFORT || "low",

@@ -28,4 +28,11 @@ export function blobToken(): string | undefined {
   );
 }
 
+/** Newer Blob stores connect without a token: Vercel signs requests itself (OIDC) and gives the store id. */
+export function blobStoreId(): string | undefined {
+  return process.env.BLOB_STORE_ID || findByEnding(["_STORE_ID"], (v) => v.startsWith("store_"));
+}
+
+export const blobConfigured = () => Boolean(blobToken() || blobStoreId());
+
 export const onVercel = () => Boolean(process.env.VERCEL);
