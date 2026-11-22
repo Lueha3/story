@@ -48,7 +48,17 @@ export type IngestResult =
  * small enough to store cheaply and to send to the AI, still sharp on a phone.
  */
 export async function normalizeImage(input: Buffer): Promise<Buffer> {
-  return sharp(input, { failOn: "none" })
+  // Cut away plain black bands along the edges (letterboxing), so the story fills the viewer.
+  let trimmed = input;
+  try {
+    const t = await sharp(input, { failOn: "none" }).rotate().trim({ background: "#000000", threshold: 24 }).toBuffer({ resolveWithObject: true });
+    const meta = await sharp(input, { failOn: "none" }).rotate().metadata();
+    // keep the trim only if something real is left (not a mostly black picture)
+    if (meta.width && meta.height && t.info.width * t.info.height > meta.width * meta.height * 0.4) trimmed = t.data;
+  } catch {
+    // nothing to trim, or a picture that is all one colour
+  }
+  return sharp(trimmed, { failOn: "none" })
     .rotate()
     .resize({ width: 1920, height: 1920, fit: "inside", withoutEnlargement: true })
     .jpeg({ quality: 85, mozjpeg: true })

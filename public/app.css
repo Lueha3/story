@@ -957,3 +957,10 @@ a.cta {
     margin-inline: auto;
   }
 }
+
+/* fill the whole screen: a story whose shape differs a little from the screen is trimmed at the edges
+   instead of getting black bars */
+.card.v-card img {
+  object-fit: cover;
+  object-position: center;
+}
