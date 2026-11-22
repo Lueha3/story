@@ -205,9 +205,11 @@
     }
   }
 
-  $('upload').addEventListener('click', async () => {
+  // The button opens the photo picker; choosing photos starts the upload right away.
+  $('upload').addEventListener('click', () => { $('files').click(); });
+  $('files').addEventListener('change', async () => {
     const files = Array.from($('files').files || []);
-    if (!files.length) { $('uploadMsg').textContent = '이미지를 먼저 골라주세요.'; return; }
+    if (!files.length) return;
     const btn = $('upload');
     btn.disabled = true;
     const lines = [];
