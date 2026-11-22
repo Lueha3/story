@@ -176,8 +176,9 @@
     placeHot();
     vCta.hidden = !s.link;
     // no link: nothing at all over the bottom of the story, not even the shading
-    document.querySelector('.v-bottom').hidden = !s.link;
-    viewer.classList.toggle('has-link', !!s.link);
+    document.querySelector('.v-bottom').hidden = true;
+    $('vGo').hidden = !s.link;
+    if (s.link) $('vGo').href = s.link;
     if (s.link) vCta.href = s.link;
     // load the next picture early so tapping on feels instant
     if (seq[pos + 1]) { const pre = new Image(); pre.src = seq[pos + 1].imageUrl; }

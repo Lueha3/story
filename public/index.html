@@ -6,7 +6,7 @@
 <meta name="description" content="인스타 스토리에 올린 꿀템을 카테고리별로 모아보는 곳">
 <title>실시간 꿀템 리딩방</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;800&family=Geist+Mono:wght@400;500&display=swap">
-<link rel="stylesheet" href="/app.css?v=1795349657">
+<link rel="stylesheet" href="/app.css?v=1795349786">
 <style>
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 [hidden] { display: none !important; }
@@ -53,9 +53,11 @@
           <span class="v-ava" aria-hidden="true">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
           </span>
-          <b id="vHandle"></b>
-          <time id="vTime"></time>
-          <span class="sp"></span>
+          <span class="v-who"><b id="vHandle"></b><time id="vTime"></time></span>
+          <a class="v-go" id="vGo" data-notap href="#" target="_blank" rel="noopener sponsored" hidden>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            <span>상품 보러가기</span>
+          </a>
           <button type="button" class="v-close" id="vClose" data-notap aria-label="닫기">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
           </button>
@@ -79,6 +81,6 @@
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/app.js?v=1795349657"></script>
+<script src="/app.js?v=1795349786"></script>
 </body>
 </html>
