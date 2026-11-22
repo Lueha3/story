@@ -27,6 +27,17 @@ export function sniffImage(buf: Buffer): ImageType | null {
   return null;
 }
 
+/** Runs one stage of saving and names the stage in the error, so a failure says where it happened. */
+async function step<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  try {
+    return await fn();
+  } catch (err) {
+    console.error(label + " failed", err);
+    const msg = err instanceof Error ? err.message : String(err);
+    throw new Error(label + " 실패: " + msg.slice(0, 200));
+  }
+}
+
 export type IngestResult =
   | { kind: "duplicate"; story: Story }
   | { kind: "created"; story: Story };
@@ -41,7 +52,7 @@ export async function ingestStory(image: Buffer, type: ImageType, takenAt: Date 
   // A creation time far in the future or before Instagram existed is a broken value: use now.
   const when = takenAt && takenAt.getTime() <= now.getTime() + 5 * MIN && takenAt.getFullYear() > 2010 ? takenAt : now;
   const id = newId();
-  const imageUrl = await store.putImage(id + "-" + hash.slice(0, 12) + "." + EXT[type], image, type);
+  const imageUrl = await step("이미지 저장", () => store.putImage(id + "-" + hash.slice(0, 12) + "." + EXT[type], image, type));
 
   const story: Story = {
     id,
@@ -61,7 +72,7 @@ export async function ingestStory(image: Buffer, type: ImageType, takenAt: Date 
     status: "pending",
   };
   try {
-    await store.insertStory(story);
+    await step("기록 저장", () => store.insertStory(story));
   } catch (err) {
     // The same picture sent twice at the same moment: keep the first one.
     const again = await store.findByHash(hash);

@@ -166,6 +166,25 @@
     }
   });
 
+  // Screenshots are large PNGs: shrink to a 1920px-tall JPEG before sending (server limit is about 4MB).
+  async function shrink(file) {
+    try {
+      const bmp = await createImageBitmap(file);
+      const scale = Math.min(1, 1920 / Math.max(bmp.width, bmp.height));
+      const w = Math.round(bmp.width * scale);
+      const h = Math.round(bmp.height * scale);
+      const c = document.createElement('canvas');
+      c.width = w;
+      c.height = h;
+      c.getContext('2d').drawImage(bmp, 0, 0, w, h);
+      if (bmp.close) bmp.close();
+      const blob = await new Promise((res) => c.toBlob(res, 'image/jpeg', 0.88));
+      return blob || file;
+    } catch (e) {
+      return file;
+    }
+  }
+
   $('upload').addEventListener('click', async () => {
     const files = Array.from($('files').files || []);
     if (!files.length) { $('uploadMsg').textContent = '이미지를 먼저 골라주세요.'; return; }
@@ -176,7 +195,7 @@
     for (let i = 0; i < files.length; i += 1) {
       $('uploadMsg').textContent = (i + 1) + ' / ' + files.length + ' 올리는 중이에요. 자동 분류까지 몇 초씩 걸려요.';
       const fd = new FormData();
-      fd.append('file', files[i]);
+      fd.append('file', await shrink(files[i]), files[i].name.replace(/\.[^.]+$/, '') + '.jpg');
       fd.append('takenAt', new Date(files[i].lastModified || Date.now()).toISOString());
       try {
         const d = await api('/api/ingest', { method: 'POST', body: fd });

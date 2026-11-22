@@ -39,7 +39,13 @@ export async function POST(req: Request) {
     }
     const parsed = times[i] ? new Date(times[i]) : null;
     const takenAt = parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
-    const r = await ingestStory(buf, type, takenAt);
+    let r;
+    try {
+      r = await ingestStory(buf, type, takenAt);
+    } catch (err) {
+      results.push({ name: f.name, error: err instanceof Error ? err.message : "저장 중 오류가 났어요." });
+      continue;
+    }
     results.push({
       name: f.name,
       result: r.kind,
