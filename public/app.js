@@ -176,7 +176,8 @@
     placeHot();
     vCta.hidden = !s.link;
     // no link: nothing at all over the bottom of the story, not even the shading
-    document.querySelector('.v-bottom').hidden = !s.link || !!s.linkBox;
+    document.querySelector('.v-bottom').hidden = !s.link;
+    viewer.classList.toggle('has-link', !!s.link);
     if (s.link) vCta.href = s.link;
     // load the next picture early so tapping on feels instant
     if (seq[pos + 1]) { const pre = new Image(); pre.src = seq[pos + 1].imageUrl; }
@@ -193,7 +194,7 @@
   const vHot = $('vHot');
   function placeHot() {
     const s = seq[pos];
-    const b = s && s.link && s.linkBox;
+    const b = null; // the button lives in its own strip under the story; nothing is drawn over the picture
     if (!b || !vImg.naturalWidth) { vHot.hidden = true; return; }
     const W = vCard.clientWidth;
     const H = vCard.clientHeight;

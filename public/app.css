@@ -991,3 +991,29 @@ a.cta {
   height: 1.05em;
   color: #1a84ff;
 }
+
+/* a story with a link: the button gets its own strip at the bottom and the story sits above it,
+   shown whole so nothing (prices included) is covered or cut */
+.viewer.has-link {
+  display: flex;
+  flex-direction: column;
+}
+.viewer.has-link .v-stage {
+  position: relative;
+  inset: auto;
+  flex: 1 1 0;
+  min-height: 0;
+  width: 100%;
+}
+.viewer.has-link .card.v-card img {
+  object-fit: contain;
+  object-position: center top;
+}
+.viewer.has-link .v-bottom {
+  position: static;
+  flex: none;
+  box-sizing: border-box;
+  width: 100%;
+  padding: 10px max(12px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 10px) max(12px, env(safe-area-inset-left, 0px));
+  background: none;
+}
