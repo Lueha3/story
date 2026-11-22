@@ -250,7 +250,7 @@
     document.documentElement.style.overflow = 'hidden';
     show(false);
     requestAnimationFrame(() => { viewer.classList.add('is-in'); });
-    vClose.focus({ preventScroll: true });
+    viewer.focus({ preventScroll: true });
     startLoop();
   }
   function closeViewer() {

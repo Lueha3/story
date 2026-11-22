@@ -1111,3 +1111,12 @@ a.cta {
 body {
   font-weight: 500;
 }
+
+/* opening a story moves focus to the viewer itself (for screen readers); it draws no outline,
+   and the close button only shows one when reached with a keyboard */
+.viewer:focus {
+  outline: none;
+}
+.v-close:focus:not(:focus-visible) {
+  outline: none;
+}
