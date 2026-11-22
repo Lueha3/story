@@ -366,7 +366,12 @@ svg {
 /* story viewer */
 .viewer {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  /* the visible screen height: on iPhone Safari 100vh reaches under the toolbars */
+  height: 100vh;
+  height: 100dvh;
   z-index: 50;
   box-sizing: border-box;
   display: flex;
@@ -384,16 +389,18 @@ svg {
   opacity: 1;
 }
 .v-stage {
-  /* as tall as the screen allows, but no taller than a 9:16 card at full width; 96px is the bar and info rows below */
-  flex: none;
+  /* takes the height left over by the button rows, but no more than a 9:16 card at full width */
+  flex: 1 1 0;
+  min-height: 0;
   width: 100%;
-  height: min(calc(100% - 96px), calc((100vw - 12px) * 16 / 9));
+  max-height: calc((100vw - 12px) * 16 / 9);
   container-type: size;
   display: flex;
   align-items: center;
   justify-content: center;
 }
-.v-card {
+/* .card.v-card: must beat the plain .card width rule further down */
+.card.v-card {
   width: min(100cqw, calc(100cqh * 9 / 16));
   border-radius: 14px;
   touch-action: none;
@@ -540,6 +547,7 @@ svg {
 }
 .v-bar,
 .v-info {
+  flex: none;
   width: min(100%, 468px);
   box-sizing: border-box;
   display: flex;
