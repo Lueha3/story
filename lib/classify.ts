@@ -58,6 +58,8 @@ const UNSORTED: Classification = {
   ok: false,
 };
 
+const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
+
 export type ImageType = "image/jpeg" | "image/png" | "image/webp" | "image/gif";
 
 export async function classifyStory(image: Buffer, mediaType: ImageType): Promise<Classification> {
@@ -65,14 +67,16 @@ export async function classifyStory(image: Buffer, mediaType: ImageType): Promis
     return { ...UNSORTED, reason: "AI 키가 설정되지 않아 자동 분류를 하지 못했어요." };
   }
   const client = new Anthropic();
+  const model = process.env.CLASSIFY_MODEL || "claude-haiku-5-5";
+  const effort = EFFORTS.find((e) => e === process.env.CLASSIFY_EFFORT) ?? "high";
+  // Server-side fallback re-runs a refused request on another model; Haiku has none, so it is only sent for others.
+  const fallback = model.includes("haiku") ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const };
   try {
     const response = await client.beta.messages.parse({
-      model: process.env.CLASSIFY_MODEL || "claude-opus-5-5",
+      model,
       max_tokens: 8000,
-      // A refused request is re-run on Anthropic's recommended fallback model.
-      betas: ["server-side-fallback-2026-07-01"],
-      fallbacks: "default",
-      output_config: { effort: "low", format: betaZodOutputFormat(Result) },
+      ...fallback,
+      output_config: { effort, format: betaZodOutputFormat(Result) },
       system: SYSTEM,
       messages: [
         {

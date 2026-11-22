@@ -38,12 +38,13 @@ AI가 이미지를 읽고 카테고리·상품 이름·가격을 알아서 채�
    | `ADMIN_TOKEN` | 12자 이상 아무 비밀번호. 단축어와 `/admin`에서 써요. |
    | `ANTHROPIC_API_KEY` | [Claude Console](https://console.anthropic.com)에서 만든 API 키 |
    | `IG_HANDLE` | 인스타 아이디 (@ 없이) |
-   | `CLASSIFY_MODEL` | 선택. 비우면 `claude-opus-5-5` |
+   | `CLASSIFY_MODEL` | 선택. 비우면 `claude-haiku-5-5` |
+| `CLASSIFY_EFFORT` | 선택. `low`~`max`, 비우면 `high` |
 
 4. Redeploy 하면 끝이에요. 표는 처음 요청이 올 때 자동으로 만들어져요.
 
-> AI 사용료는 스토리 한 장마다 들어요. 하루 30장 기준 금액은 첫 주 사용량을 보고 알려드릴게요.
-> 더 싸게 하려면 `CLASSIFY_MODEL`을 `claude-sonnet-5-5`나 `claude-haiku-5-5`로 바꿔요(정확도는 직접 확인 필요).
+> AI 사용료는 스토리 한 장마다 들어요. 기본값(Haiku 5.5, 높음)은 하루 30장에 한 달 1~2달러 정도로 예상해요(추정치).
+> 분류가 자주 틀리면 `CLASSIFY_MODEL`을 `claude-sonnet-5-5`나 `claude-opus-5-5`로 올려요. 비용은 몇십 배 늘어요.
 
 ## 아이폰 단축어 2개
 
