@@ -1077,3 +1077,22 @@ a.cta {
 .v-go:active::before {
   opacity: 0.85;
 }
+
+/* the product button is set in Gmarket Sans */
+@font-face {
+  font-family: 'GmarketSans';
+  font-weight: 700;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+}
+@font-face {
+  font-family: 'GmarketSans';
+  font-weight: 500;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+}
+.cta {
+  font-family: 'GmarketSans', var(--font);
+  font-weight: 700;
+  padding-top: 2px;
+}
