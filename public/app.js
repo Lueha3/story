@@ -119,9 +119,6 @@
   function updateHeader() {
     $('handle').textContent = handle ? '@' + handle : '';
     $('vHandle').textContent = handle ? '@' + handle : '';
-    const ig = $('igLink');
-    ig.hidden = !handle;
-    if (handle) ig.href = 'https://www.instagram.com/' + encodeURIComponent(handle) + '/';
     if (!STORIES.length) {
       $('statusText').textContent = '첫 스토리를 기다리는 중이에요';
       return;
