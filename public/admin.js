@@ -82,6 +82,9 @@
   async function reload() {
     const data = await api('/api/admin/stories');
     stories = data.stories;
+    const todo = stories.filter((s) => !s.linkBox && !s.stickerChecked).length;
+    $('locateRow').hidden = !todo;
+    $('locate').querySelector('span').textContent = '지난 스토리 버튼 위치 찾기 (' + todo + '개)';
     render();
   }
 
@@ -238,6 +241,26 @@
     $('files').value = '';
     btn.disabled = false;
     reload().catch((err) => say(err.message));
+  });
+
+  // Older stories have no saved sticker position: ask a few at a time until none are left.
+  $('locate').addEventListener('click', async () => {
+    const btn = $('locate');
+    btn.disabled = true;
+    let found = 0;
+    try {
+      for (let i = 0; i < 60; i += 1) {
+        const d = await api('/api/admin/locate', { method: 'POST' });
+        found += d.found;
+        $('uploadMsg').textContent = '스티커 위치를 찾는 중이에요. 남은 스토리 ' + d.left + '개';
+        if (!d.left || !d.done) break;
+      }
+      $('uploadMsg').textContent = '끝났어요. 상품링크 스티커를 ' + found + '개 스토리에서 찾았어요.';
+    } catch (err) {
+      $('uploadMsg').textContent = err.message;
+    }
+    btn.disabled = false;
+    reload().catch(() => {});
   });
 
   $('addLink').addEventListener('click', async () => {

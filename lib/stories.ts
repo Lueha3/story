@@ -104,6 +104,8 @@ export async function ingestStory(original: Buffer, originalType: ImageType, tak
     hidden: false,
     checked: false,
     status: "pending",
+    linkBox: null,
+    stickerChecked: false,
   };
   try {
     await step("기록 저장", () => store.insertStory(story));
@@ -125,6 +127,8 @@ export async function ingestStory(original: Buffer, originalType: ImageType, tak
     altCategory: c.altCategory,
     reason: c.reason,
     status: c.ok ? "done" : "failed",
+    linkBox: c.linkBox,
+    stickerChecked: c.ok,
   });
   return { kind: "created", story: updated ?? story };
 }
@@ -180,4 +184,27 @@ export function cleanUrl(raw: unknown): string | null {
   } catch {
     return null;
   }
+}
+
+/** Finds the link sticker for stories saved before that was read. Returns how many were handled and how many remain. */
+export async function locateStickers(limit: number): Promise<{ done: number; found: number; left: number }> {
+  const store = await getStore();
+  const todo = (await store.listStories()).filter((s) => !s.linkBox && !s.stickerChecked);
+  let found = 0;
+  const batch = todo.slice(0, limit);
+  for (const s of batch) {
+    let box = null;
+    try {
+      const img = await store.getImage(s.imageUrl);
+      const c = await classifyStory(img, sniffImage(img) ?? "image/jpeg");
+      if (!c.ok) continue;
+      box = c.linkBox;
+    } catch (err) {
+      console.error("locateStickers failed for " + s.id, err);
+      continue;
+    }
+    if (box) found += 1;
+    await store.updateStory(s.id, { linkBox: box, stickerChecked: true });
+  }
+  return { done: batch.length, found, left: todo.length - batch.length };
 }

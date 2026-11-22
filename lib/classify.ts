@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { CATEGORIES, type Category } from "./types";
+import { CATEGORIES, type Category, type LinkBox } from "./types";
 
 export interface Classification {
   category: Category;
@@ -10,6 +10,7 @@ export interface Classification {
   sure: boolean;
   altCategory: Category | null;
   reason: string;
+  linkBox: LinkBox | null;
   ok: boolean;
 }
 
@@ -21,6 +22,9 @@ const Result = z.object({
   confident: z.boolean(),
   alternative_category: z.enum(CATEGORIES).nullable(),
   reason: z.string(),
+  link_sticker: z
+    .object({ left: z.number(), top: z.number(), right: z.number(), bottom: z.number() })
+    .nullable(),
 });
 
 // The owner's own sorting rules. Edit these lines to change how stories are sorted.
@@ -41,6 +45,7 @@ Fixed rules from the owner:
 - Grooming products, perfume and stories without a product are always etc.
 
 Fill the fields like this:
+- link_sticker: the bounding box of the link sticker (a rounded white pill with a chain-link icon and text such as "상품링크" or "상품 링크"), as fractions of the image: left and right are fractions of the image width, top and bottom fractions of the image height, each from 0 to 1, measured from the top-left corner. Be as exact as you can: a button is placed over this box. null when the story has no link sticker.
 - is_product: false when the story shows no product.
 - item_name: a short Korean product name a shopper would recognise, without the brand when the brand is unclear (e.g. "카고 팬츠", "스케이트 로퍼"). Empty when there is no product.
 - price_text: the discount and final price exactly as printed, e.g. "33% 99,830원". Empty when no price is printed.
@@ -55,8 +60,21 @@ const UNSORTED: Classification = {
   sure: false,
   altCategory: null,
   reason: "",
+  linkBox: null,
   ok: false,
 };
+
+function toBox(b: { left: number; top: number; right: number; bottom: number } | null): LinkBox | null {
+  if (!b) return null;
+  const c = (v: number) => Math.min(1, Math.max(0, v));
+  const x = c(Math.min(b.left, b.right));
+  const y = c(Math.min(b.top, b.bottom));
+  const w = c(Math.max(b.left, b.right)) - x;
+  const h = c(Math.max(b.top, b.bottom)) - y;
+  // a real sticker is a small wide pill; anything else is a misread
+  if (w < 0.08 || h < 0.015 || w > 0.9 || h > 0.25) return null;
+  return { x, y, w, h };
+}
 
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
 
@@ -101,6 +119,7 @@ export async function classifyStory(image: Buffer, mediaType: ImageType): Promis
       sure: r.confident || !alt,
       altCategory: alt,
       reason: r.reason.trim(),
+      linkBox: toBox(r.link_sticker),
       ok: true,
     };
   } catch (err) {

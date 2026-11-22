@@ -80,6 +80,7 @@ export function createLocalStore(): Store {
         if (l) Object.assign(l, patch, { id });
         await save(db);
       }),
+    getImage: (url) => fs.readFile(path.join(IMAGE_DIR, path.basename(url))),
     putImage: async (name, data) => {
       await fs.mkdir(IMAGE_DIR, { recursive: true });
       await fs.writeFile(path.join(IMAGE_DIR, name), data);

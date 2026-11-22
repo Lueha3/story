@@ -10,6 +10,14 @@ export const CATEGORY_LABEL: Record<Category, string> = {
   etc: "기타",
 };
 
+/** Where the "상품링크" sticker sits in the picture, as fractions (0..1) of its width and height. */
+export interface LinkBox {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+}
+
 export type StoryStatus = "pending" | "done" | "failed";
 
 export interface Story {
@@ -32,6 +40,9 @@ export interface Story {
   /** true once the owner confirmed or changed the category by hand. */
   checked: boolean;
   status: StoryStatus;
+  linkBox: LinkBox | null;
+  /** true once the AI has looked for the sticker (found or not), so it is not asked again. */
+  stickerChecked: boolean;
 }
 
 export interface QueuedLink {
@@ -50,6 +61,7 @@ export interface PublicStory {
   itemName: string;
   priceText: string;
   link: string | null;
+  linkBox: LinkBox | null;
 }
 
 export function toPublic(s: Story): PublicStory {
@@ -61,6 +73,7 @@ export function toPublic(s: Story): PublicStory {
     itemName: s.itemName,
     priceText: s.priceText,
     link: s.link,
+    linkBox: s.linkBox ?? null,
   };
 }
 

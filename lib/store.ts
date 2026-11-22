@@ -18,6 +18,7 @@ export interface Store {
   insertLink(link: QueuedLink): Promise<void>;
   updateLink(id: string, patch: Partial<QueuedLink>): Promise<void>;
 
+  getImage(url: string): Promise<Buffer>;
   putImage(name: string, data: Buffer, contentType: string): Promise<string>;
   deleteImage(url: string): Promise<void>;
 }

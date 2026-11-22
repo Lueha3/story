@@ -27,7 +27,18 @@ function rowToStory(r: Row): Story {
     hidden: Boolean(r.hidden),
     checked: Boolean(r.checked),
     status: r.status as StoryStatus,
+    linkBox: parseBox(r.link_box),
+    stickerChecked: Boolean(r.sticker_checked),
   };
+}
+
+function parseBox(v: unknown) {
+  if (typeof v !== "string" || !v) return null;
+  try {
+    return JSON.parse(v);
+  } catch {
+    return null;
+  }
 }
 
 function rowToLink(r: Row): QueuedLink {
@@ -55,6 +66,8 @@ const STORY_COLS: Record<keyof Story, string> = {
   hidden: "hidden",
   checked: "checked",
   status: "status",
+  linkBox: "link_box",
+  stickerChecked: "sticker_checked",
 };
 
 const LINK_COLS: Record<keyof QueuedLink, string> = {
@@ -104,6 +117,8 @@ export function createVercelStore(databaseUrl: string): Store {
           checked boolean NOT NULL DEFAULT false,
           status text NOT NULL
         )`;
+        await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS link_box text`;
+        await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS sticker_checked boolean NOT NULL DEFAULT false`;
         await sql`CREATE TABLE IF NOT EXISTS links (
           id text PRIMARY KEY,
           url text NOT NULL,
@@ -124,7 +139,7 @@ export function createVercelStore(databaseUrl: string): Store {
     const vals: unknown[] = [];
     for (const [k, v] of Object.entries(patch)) {
       if (k === "id" || !(k in cols) || v === undefined) continue;
-      vals.push(v);
+      vals.push(k === "linkBox" && v !== null ? JSON.stringify(v) : v);
       sets.push(`${cols[k]} = $${vals.length}`);
     }
     if (!sets.length) return [] as Row[];
@@ -150,9 +165,10 @@ export function createVercelStore(databaseUrl: string): Store {
     async insertStory(s) {
       await init();
       await sql`INSERT INTO stories (id, image_url, image_hash, taken_at, created_at, category, item_name, price_text,
-        sure, alt_category, reason, link, hidden, checked, status)
+        sure, alt_category, reason, link, hidden, checked, status, link_box, sticker_checked)
         VALUES (${s.id}, ${s.imageUrl}, ${s.imageHash}, ${s.takenAt}, ${s.createdAt}, ${s.category}, ${s.itemName},
-        ${s.priceText}, ${s.sure}, ${s.altCategory}, ${s.reason}, ${s.link}, ${s.hidden}, ${s.checked}, ${s.status})`;
+        ${s.priceText}, ${s.sure}, ${s.altCategory}, ${s.reason}, ${s.link}, ${s.hidden}, ${s.checked}, ${s.status},
+        ${s.linkBox ? JSON.stringify(s.linkBox) : null}, ${s.stickerChecked})`;
     },
     async updateStory(id, patch) {
       await init();
@@ -176,6 +192,16 @@ export function createVercelStore(databaseUrl: string): Store {
     async updateLink(id, patch) {
       await init();
       await patchRow("links", LINK_COLS, id, patch as Record<string, unknown>);
+    },
+    async getImage(url) {
+      if (url.startsWith("/api/image/")) {
+        const r = await readPrivateImage(url.slice("/api/image/".length));
+        if (!r) throw new Error("image not found");
+        return Buffer.from(await new Response(r.stream).arrayBuffer());
+      }
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("image fetch failed " + res.status);
+      return Buffer.from(await res.arrayBuffer());
     },
     async putImage(name, data, contentType) {
       if (!blobConfigured()) throw new Error(NO_BLOB);

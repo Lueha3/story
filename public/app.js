@@ -173,9 +173,10 @@
     vSegs.innerHTML = segs;
     fill = vSegs.children[at] ? vSegs.children[at].firstChild : null;
     $('vTime').textContent = s.md + ' ' + s.clock;
+    placeHot();
     vCta.hidden = !s.link;
     // no link: nothing at all over the bottom of the story, not even the shading
-    document.querySelector('.v-bottom').hidden = !s.link;
+    document.querySelector('.v-bottom').hidden = !s.link || !!s.linkBox;
     if (s.link) vCta.href = s.link;
     // load the next picture early so tapping on feels instant
     if (seq[pos + 1]) { const pre = new Image(); pre.src = seq[pos + 1].imageUrl; }
@@ -187,6 +188,37 @@
       vFlag.classList.add('go');
     }
   }
+  // Puts the button exactly over the link sticker. The picture covers the card (object-fit: cover),
+  // so the sticker's place in the picture is converted to its place on screen.
+  const vHot = $('vHot');
+  function placeHot() {
+    const s = seq[pos];
+    const b = s && s.link && s.linkBox;
+    if (!b || !vImg.naturalWidth) { vHot.hidden = true; return; }
+    const W = vCard.clientWidth;
+    const H = vCard.clientHeight;
+    const scale = Math.max(W / vImg.naturalWidth, H / vImg.naturalHeight);
+    const iw = vImg.naturalWidth * scale;
+    const ih = vImg.naturalHeight * scale;
+    const ox = (W - iw) / 2;
+    const oy = (H - ih) / 2;
+    // a little larger than the sticker, so it is fully covered even when the reading is slightly off
+    const padX = b.w * iw * 0.06;
+    const padY = b.h * ih * 0.14;
+    const w = b.w * iw + padX * 2;
+    const h = b.h * ih + padY * 2;
+    vHot.style.left = (ox + b.x * iw - padX) + 'px';
+    vHot.style.top = (oy + b.y * ih - padY) + 'px';
+    vHot.style.width = w + 'px';
+    vHot.style.height = h + 'px';
+    vHot.style.borderRadius = (h * 0.36) + 'px';
+    vHot.style.fontSize = Math.max(11, Math.min(h * 0.44, w / 5.6)) + 'px';
+    vHot.href = s.link;
+    vHot.hidden = false;
+  }
+  vImg.addEventListener('load', placeHot);
+  window.addEventListener('resize', () => { if (!viewer.hidden) placeHot(); });
+
   function frame(ts) {
     raf = requestAnimationFrame(frame);
     const dt = last ? Math.min(ts - last, 100) : 0;
