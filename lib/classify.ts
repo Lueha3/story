@@ -67,8 +67,8 @@ export async function classifyStory(image: Buffer, mediaType: ImageType): Promis
     return { ...UNSORTED, reason: "AI 키가 설정되지 않아 자동 분류를 하지 못했어요." };
   }
   const client = new Anthropic();
-  const model = process.env.CLASSIFY_MODEL || "claude-haiku-5-5";
-  const effort = EFFORTS.find((e) => e === process.env.CLASSIFY_EFFORT) ?? "high";
+  const model = process.env.CLASSIFY_MODEL || "claude-opus-5-5";
+  const effort = EFFORTS.find((e) => e === process.env.CLASSIFY_EFFORT) ?? "low";
   // Server-side fallback re-runs a refused request on another model; Haiku has none, so it is only sent for others.
   const fallback = model.includes("haiku") ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const };
   try {
