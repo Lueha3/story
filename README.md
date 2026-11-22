@@ -39,7 +39,7 @@ AI가 이미지를 읽고 카테고리·상품 이름·가격을 알아서 채�
    | `ANTHROPIC_API_KEY` | [Claude Console](https://console.anthropic.com)에서 만든 API 키 |
    | `IG_HANDLE` | 인스타 아이디 (@ 없이) |
    | `CLASSIFY_MODEL` | 선택. 비우면 `claude-opus-5-5` |
-| `CLASSIFY_EFFORT` | 선택. `low`~`max`, 비우면 `low` |
+   | `CLASSIFY_EFFORT` | 선택. `low`~`max`, 비우면 `low` |
 
 4. Redeploy 하면 끝이에요. 표는 처음 요청이 올 때 자동으로 만들어져요.
 
