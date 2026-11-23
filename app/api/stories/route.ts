@@ -1,5 +1,5 @@
 import { getStore } from "@/lib/store";
-import { toPublic } from "@/lib/types";
+import { byNewest, toPublic } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -17,7 +17,7 @@ export async function GET() {
   }
   const stories = all
     .filter((s) => !s.hidden && s.status !== "pending")
-    .sort((a, b) => Date.parse(b.takenAt) - Date.parse(a.takenAt))
+    .sort(byNewest)
     .map(toPublic);
   return Response.json(
     { stories, updatedAt: stories[0]?.takenAt ?? null, instagram: (process.env.IG_HANDLE || "").replace(/^@/, ""), avatar },

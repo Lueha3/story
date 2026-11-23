@@ -68,7 +68,7 @@ export function toPublic(s: Story): PublicStory {
   return {
     id: s.id,
     imageUrl: s.imageUrl,
-    takenAt: s.takenAt,
+    takenAt: new Date(orderTime(s)).toISOString(),
     category: s.category,
     itemName: s.itemName,
     priceText: s.priceText,
@@ -80,3 +80,18 @@ export function toPublic(s: Story): PublicStory {
 export function isCategory(v: unknown): v is Category {
   return typeof v === "string" && (CATEGORIES as readonly string[]).includes(v);
 }
+
+// A phone often labels a picked photo with the moment it was picked, not when the story was posted, so a
+// whole batch gets nearly the same time in a jumbled order. A time that close to the upload says nothing:
+// then the upload moment orders it, and uploads go one at a time in the order the photos were picked.
+const SAME_MOMENT = 15 * 60 * 1000;
+
+export function orderTime(s: { takenAt: string; createdAt: string }): number {
+  const t = Date.parse(s.takenAt);
+  const c = Date.parse(s.createdAt);
+  return Math.abs(c - t) < SAME_MOMENT ? c : t;
+}
+
+/** Newest first. */
+export const byNewest = (a: { takenAt: string; createdAt: string }, b: { takenAt: string; createdAt: string }) =>
+  orderTime(b) - orderTime(a);

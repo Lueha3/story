@@ -1,5 +1,6 @@
 import { isOwner, unauthorized } from "@/lib/auth";
 import { getStore } from "@/lib/store";
+import { byNewest, orderTime } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -12,6 +13,7 @@ export async function GET(req: Request) {
   } catch (err) {
     return Response.json({ error: err instanceof Error ? err.message : "목록을 불러오지 못했어요." }, { status: 503 });
   }
-  const stories = all.sort((a, b) => Date.parse(b.takenAt) - Date.parse(a.takenAt));
+  // the time shown is the one the list is ordered by
+  const stories = all.sort(byNewest).map((s) => ({ ...s, takenAt: new Date(orderTime(s)).toISOString() }));
   return Response.json({ stories });
 }
