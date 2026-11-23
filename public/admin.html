@@ -134,6 +134,12 @@
 .crow span:not(:first-child) { text-align: right; }
 .crow b { font-weight: 700; }
 .reg-stat { font-size: 12px; color: var(--fg-3); font-variant-numeric: tabular-nums; }
+/* link pairing preview: one simple line per link */
+.bulk li { gap: 10px; padding: 6px 0; }
+.bulk img, .bulk .noimg { width: 34px; height: 48px; }
+.bulk .bt b { font-size: 14px; }
+.bulk .bt .to { color: var(--fg-2); font-size: 12px; }
+.bulk li.none .bt b { color: var(--fg-2); font-weight: 500; }
 </style>
 </head>
 <body>
@@ -229,12 +235,10 @@
           <textarea id="bulkText" rows="6" placeholder="https://..."></textarea>
           <div class="row">
             <button type="button" class="pill solid" id="bulkAi"><span>AI로 짝 찾기</span></button>
-            <button type="button" class="pill" id="bulkCheck"><span>순서대로 짝짓기</span></button>
-            <button type="button" class="pill" id="bulkFlip" hidden><span>순서 뒤집기</span></button>
-            <button type="button" class="pill solid" id="bulkApply" hidden><span>넣기</span></button>
           </div>
           <p class="msg" id="bulkMsg"></p>
           <ol class="bulk" id="bulkList" hidden></ol>
+          <div class="row"><button type="button" class="pill solid" id="bulkApply" hidden><span>넣기</span></button></div>
         </section>
 
         <section>
@@ -279,6 +283,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795476621"></script>
+<script src="/admin.js?v=1795477135"></script>
 </body>
 </html>

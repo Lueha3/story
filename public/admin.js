@@ -237,36 +237,39 @@
   // Reads every link from pasted text in order, each with the line of text above it as a hint,
   // and pairs them with the stories in the list as shown (top to bottom).
   let bulkPairs = [];
-  let bulkFlipped = false;
   function readLinks(text) {
     const out = [];
     let hint = '';
+    let group = '';
+    const tidy = (t) => t.replace(/[\s:：\-–—]+$/, '').trim();
     text.split(/\r?\n/).forEach((line) => {
       const urls = line.match(/https?:\/\/[^\s<>"']+/g);
       if (!urls) {
         const t = line.trim().replace(/^[—–-]+$/, '');
-        if (t) hint = t;
+        const head = t.match(/^\[\s*(.+?)\s*\]$/);
+        if (head) { group = head[1]; hint = ''; return; }
+        if (t) hint = tidy(t);
         return;
       }
-      const before = line.slice(0, line.indexOf(urls[0])).trim();
-      urls.forEach((u) => { out.push({ url: u, hint: before || hint }); });
+      const before = tidy(line.slice(0, line.indexOf(urls[0])));
+      const label = before || hint;
+      urls.forEach((u) => { out.push({ url: u, hint: group && label ? group + ' · ' + label : label || group }); });
       hint = '';
     });
     return out;
   }
   // pairs: [{ story, link: { url, hint }, include, sure, why }]
+  // one line per link: the text written with the link, and the story picture the AI matched it to
   function renderBulk(msg) {
     $('bulkMsg').textContent = msg;
     $('bulkList').innerHTML = bulkPairs.map((p, i) => {
       const st = p.story;
-      return '<li class="' + (p.sure ? '' : 'unsure') + '" data-i="' + i + '">' +
-        '<label class="bc"><input type="checkbox" data-inc' + (p.include ? ' checked' : '') + (st ? '' : ' disabled') + ' aria-label="' + (i + 1) + '번 넣기"></label>' +
-        '<span class="bn">' + (i + 1) + '</span>' +
-        (st ? '<img src="' + esc(st.imageUrl) + '" alt="" loading="lazy">' : '<span class="noimg">짝 없음</span>') +
-        '<span class="bt"><b>' + (st ? esc(st.itemName || '이름 없음') : '맞는 스토리를 못 찾았어요') + (p.sure ? '' : ' <em class="flag">확인 필요</em>') + '</b>' +
-        '<span>' + (p.link.hint ? esc(p.link.hint) : '<em class="none">설명 없음</em>') + '</span>' +
-        (p.why ? '<span class="why">AI: ' + esc(p.why) + '</span>' : '') +
-        '<small>' + esc(p.link.url) + (st && st.link ? ' · 지금 링크를 바꿔요' : '') + '</small></span></li>';
+      const name = p.link.hint || '설명 없는 링크';
+      return '<li class="' + (st ? (p.sure ? '' : 'unsure') : 'none') + '" data-i="' + i + '">' +
+        '<label class="bc"><input type="checkbox" data-inc' + (p.include ? ' checked' : '') + (st ? '' : ' disabled') + ' aria-label="' + esc(name) + ' 넣기"></label>' +
+        (st ? '<img src="' + esc(st.imageUrl) + '" alt="" loading="lazy">' : '<span class="noimg">없음</span>') +
+        '<span class="bt"><b>' + esc(name) + (st && !p.sure ? ' <em class="flag">확인 필요</em>' : '') + '</b>' +
+        '<span class="to">' + (st ? '→ ' + esc(st.itemName || '이름 없는 사진') + (st.link ? ' · 지금 링크를 바꿔요' : '') : '맞는 사진이 없어요') + '</span></span></li>';
     }).join('');
     $('bulkList').hidden = !bulkPairs.length;
     drawApply();
@@ -275,7 +278,7 @@
     const n = bulkPairs.filter((p) => p.include && p.story).length;
     $('bulkApply').hidden = !bulkPairs.length;
     $('bulkApply').disabled = !n;
-    $('bulkApply').querySelector('span').textContent = n + '개 넣기';
+    $('bulkApply').querySelector('span').textContent = n + '개 링크 넣기';
   }
   $('bulkList').addEventListener('change', (e) => {
     const box = e.target.closest('input[data-inc]');
@@ -284,30 +287,18 @@
     drawApply();
   });
 
-  // in order: the nth link goes to the nth story in the list
-  function drawBulk() {
-    const links = readLinks($('bulkText').value);
-    if (bulkFlipped) links.reverse();
-    const targets = visible();
-    const n = Math.min(links.length, targets.length);
-    bulkPairs = [];
-    for (let i = 0; i < n; i += 1) bulkPairs.push({ story: targets[i], link: links[i], include: true, sure: true, why: '' });
-    let msg = '순서대로 짝지었어요. 링크 ' + links.length + '개, 목록의 스토리 ' + targets.length + '개' + (bulkFlipped ? ' · 링크 순서를 뒤집었어요' : '') + '.';
-    if (links.length !== targets.length) msg += ' 개수가 달라요. 앞에서부터 ' + n + '개만 짝지어요.';
-    $('bulkFlip').hidden = !links.length;
-    renderBulk(links.length ? msg : '글에서 링크를 찾지 못했어요.');
-  }
+
 
   // by the AI: it reads each story picture and the line above each link
   async function aiMatch() {
     const links = readLinks($('bulkText').value);
     if (!links.length) { renderBulk('글에서 링크를 찾지 못했어요.'); return; }
-    const targets = visible();
-    if (!targets.length) { renderBulk('짝지을 스토리가 목록에 없어요.'); return; }
+    // candidates: every shown story still without a link, whatever tab or category is open
+    const targets = stories.filter((s) => !s.hidden && !s.link);
+    if (!targets.length) { renderBulk('링크가 없는 사진이 없어요. 모든 사진에 이미 링크가 있어요.'); return; }
     $('bulkAi').disabled = true;
-    $('bulkFlip').hidden = true;
     bulkPairs = [];
-    renderBulk('AI가 스토리 ' + targets.length + '개와 링크 ' + links.length + '개를 비교하는 중이에요. 1~2분 걸릴 수 있어요.');
+    renderBulk('AI가 링크 ' + links.length + '개를 링크 없는 사진 ' + targets.length + '장과 비교하는 중이에요. 1~2분 걸릴 수 있어요.');
     try {
       const d = await api('/api/admin/match', {
         method: 'POST',
@@ -323,15 +314,13 @@
       const sure = bulkPairs.filter((p) => p.sure).length;
       const unsure = bulkPairs.filter((p) => p.story && !p.sure).length;
       const none = bulkPairs.filter((p) => !p.story).length;
-      renderBulk('AI가 짝을 찾았어요. 확실 ' + sure + '개' + (unsure ? ', 확인 필요 ' + unsure + '개(체크해야 들어가요)' : '') + (none ? ', 짝 없음 ' + none + '개' : '') + '.');
+      renderBulk('찾았어요. 맞는 짝 ' + sure + '개' + (unsure ? ', 확인 필요 ' + unsure + '개(맞으면 체크)' : '') + (none ? ', 사진 없음 ' + none + '개' : '') + '. 확인하고 넣기를 누르세요.');
     } catch (err) {
       renderBulk(err.message);
     }
     $('bulkAi').disabled = false;
   }
   $('bulkAi').addEventListener('click', aiMatch);
-  $('bulkCheck').addEventListener('click', () => { bulkFlipped = false; drawBulk(); });
-  $('bulkFlip').addEventListener('click', () => { bulkFlipped = !bulkFlipped; drawBulk(); });
   $('bulkApply').addEventListener('click', async () => {
     if (!bulkPairs.length) return;
     $('bulkApply').disabled = true;
@@ -344,8 +333,7 @@
       $('bulkMsg').textContent = d.saved + '개 스토리에 링크를 넣었어요.';
       $('bulkList').hidden = true;
       $('bulkApply').hidden = true;
-      $('bulkFlip').hidden = true;
-      bulkPairs = [];
+        bulkPairs = [];
       await reload();
     } catch (err) {
       $('bulkMsg').textContent = err.message;
