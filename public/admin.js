@@ -692,5 +692,66 @@
     }
   });
 
+  // ---- visitors tab ----
+  const SRC = { instagram: '인스타그램', kakao: '카카오톡', direct: '직접 입력', other: '기타' };
+  const DEV = { ios: '아이폰', android: '안드로이드', pc: 'PC' };
+  let view = 'stories';
+  let statsTimer = 0;
+  function setView(v) {
+    view = v;
+    $('work').classList.toggle('on-stats', v === 'stats');
+    $('work').classList.toggle('on-stories', v === 'stories');
+    $('statsView').hidden = v !== 'stats';
+    document.querySelectorAll('[data-view]').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.view === v));
+      b.setAttribute('aria-selected', String(b.dataset.view === v));
+    });
+    clearInterval(statsTimer);
+    if (v === 'stats') {
+      loadStats();
+      statsTimer = setInterval(() => { if (!document.hidden) loadStats(); }, 60000);
+    }
+  }
+  document.querySelectorAll('[data-view]').forEach((b) => b.addEventListener('click', () => setView(b.dataset.view)));
+  $('statsReload').addEventListener('click', () => loadStats());
+  const fmt = (n) => Number(n || 0).toLocaleString('ko-KR');
+  const rate = (c, v) => (v ? Math.round((c / v) * 1000) / 10 + '%' : '-');
+  function bars(list, names) {
+    const total = list.reduce((a, x) => a + x.visitors, 0);
+    if (!total) return '<p class="empty-s">아직 기록이 없어요.</p>';
+    return list.map((x) => '<div class="bar"><span>' + esc(names[x.key] || x.key) + '</span><em><i style="width:' + Math.round((x.visitors / total) * 100) + '%"></i></em><b>' + Math.round((x.visitors / total) * 100) + '%</b></div>').join('');
+  }
+  async function loadStats() {
+    try {
+      const d = await api('/api/admin/stats');
+      const t = d.today;
+      const y = d.yesterday;
+      $('kpis').innerHTML =
+        '<div class="kpi live"><span>지금 보는 중</span><b>' + fmt(d.now) + '</b><small>최근 5분</small></div>' +
+        '<div class="kpi"><span>오늘 방문자</span><b>' + fmt(t.visitors) + '</b><small>어제 ' + fmt(y.visitors) + '</small></div>' +
+        '<div class="kpi"><span>오늘 스토리 조회</span><b>' + fmt(t.views) + '</b><small>어제 ' + fmt(y.views) + '</small></div>' +
+        '<div class="kpi"><span>오늘 상품링크 클릭</span><b>' + fmt(t.clicks) + '</b><small>클릭률 ' + rate(t.clicks, t.views) + '</small></div>' +
+        '<div class="kpi"><span>최근 7일 방문자</span><b>' + fmt(d.week) + '</b><small>하루 방문자를 더한 수</small></div>' +
+        '<div class="kpi"><span>최근 30일 방문자</span><b>' + fmt(d.month) + '</b><small>하루 방문자를 더한 수</small></div>';
+      const max = Math.max(1, ...d.days.map((x) => x.visitors));
+      $('spark').innerHTML = d.days.map((x, i) => '<i' + (i === d.days.length - 1 ? ' class="today"' : '') + ' style="height:' + Math.max(2, Math.round((x.visitors / max) * 100)) + '%" title="' + x.day + ' · ' + x.visitors + '명"></i>').join('');
+      const md = (s) => Number(s.slice(5, 7)) + '.' + Number(s.slice(8, 10));
+      $('sparkX').innerHTML = '<span>' + md(d.days[0].day) + '</span><span>최대 ' + fmt(max) + '명</span><span>오늘</span>';
+      $('sources').innerHTML = bars(d.sources, SRC);
+      $('devices').innerHTML = bars(d.devices, DEV);
+      const byId = {};
+      stories.forEach((s) => { byId[s.id] = s; });
+      $('top').innerHTML = d.top.length ? d.top.map((x, i) => {
+        const s = byId[x.storyId];
+        return '<li><span class="tn">' + (i + 1) + '</span>' + (s ? '<img src="' + esc(s.imageUrl) + '" alt="" loading="lazy">' : '<img alt="">') +
+          '<span class="tt"><b>' + esc(s ? (s.itemName || '이름 없음') : '지운 스토리') + '</b><span>클릭 ' + fmt(x.clicks) + ' · 조회 ' + fmt(x.views) + ' · 클릭률 ' + rate(x.clicks, x.views) + '</span></span></li>';
+      }).join('') : '<p class="empty-s">아직 기록이 없어요.</p>';
+      $('statsMsg').textContent = '';
+    } catch (err) {
+      $('statsMsg').textContent = err.message;
+    }
+  }
+  setView('stories');
+
   if (token) login();
 })();

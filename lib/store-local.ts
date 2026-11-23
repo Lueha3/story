@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import type { Store } from "./store";
+import { dayBefore, type DayCount, type Stats, type VisitEvent } from "./stats";
 import type { QueuedLink, Story } from "./types";
 
 // Local development only: everything sits in .data/ next to the project.
@@ -12,6 +13,7 @@ interface Db {
   stories: Story[];
   links: QueuedLink[];
   settings?: Record<string, string>;
+  events?: VisitEvent[];
 }
 
 let queue: Promise<unknown> = Promise.resolve();
@@ -67,6 +69,19 @@ export function createLocalStore(): Store {
         });
         await save(db);
       }),
+    addEvent: (e) =>
+      locked(async () => {
+        const db = await load();
+        (db.events ??= []).push(e);
+        await save(db);
+      }),
+    pruneEvents: (beforeDay) =>
+      locked(async () => {
+        const db = await load();
+        db.events = (db.events ?? []).filter((e) => e.day >= beforeDay);
+        await save(db);
+      }),
+    stats: (today) => locked(async () => localStats((await load()).events ?? [], today)),
     getSetting: (key) => locked(async () => (await load()).settings?.[key] ?? null),
     setSetting: (key, value) =>
       locked(async () => {
@@ -98,5 +113,59 @@ export function createLocalStore(): Store {
       const name = path.basename(url);
       await fs.rm(path.join(IMAGE_DIR, name), { force: true });
     },
+  };
+}
+
+// The same totals the database works out, done in memory for local development.
+function localStats(events: VisitEvent[], today: string): Stats {
+  const yesterday = dayBefore(today, 1);
+  const count = (day: string): DayCount => {
+    const ev = events.filter((e) => e.day === day);
+    return {
+      visitors: new Set(ev.map((e) => e.visitor)).size,
+      visits: ev.filter((e) => e.type === "visit").length,
+      views: ev.filter((e) => e.type === "view").length,
+      clicks: ev.filter((e) => e.type === "click").length,
+    };
+  };
+  const since = (n: number) => dayBefore(today, n - 1);
+  const dailyVisitors = (from: string) => {
+    const per = new Map<string, Set<string>>();
+    events.filter((e) => e.day >= from).forEach((e) => {
+      if (!per.has(e.day)) per.set(e.day, new Set());
+      per.get(e.day)!.add(e.visitor);
+    });
+    return per;
+  };
+  const sum = (m: Map<string, Set<string>>) => Array.from(m.values()).reduce((a, s) => a + s.size, 0);
+  const m30 = dailyVisitors(since(30));
+  const group = (key: "source" | "device") => {
+    const per = new Map<string, Set<string>>();
+    events.filter((e) => e.day >= since(30)).forEach((e) => {
+      if (!per.has(e[key])) per.set(e[key], new Set());
+      per.get(e[key])!.add(e.day + e.visitor);
+    });
+    return Array.from(per, ([k, v]) => ({ key: k, visitors: v.size })).sort((a, b) => b.visitors - a.visitors);
+  };
+  const per = new Map<string, { views: number; clicks: number }>();
+  events.filter((e) => e.storyId && e.day >= since(30)).forEach((e) => {
+    const t = per.get(e.storyId as string) ?? { views: 0, clicks: 0 };
+    if (e.type === "view") t.views += 1;
+    if (e.type === "click") t.clicks += 1;
+    per.set(e.storyId as string, t);
+  });
+  const now = Date.now() - 5 * 60 * 1000;
+  return {
+    now: new Set(events.filter((e) => Date.parse(e.ts) >= now).map((e) => e.visitor)).size,
+    today: count(today),
+    yesterday: count(yesterday),
+    week: sum(dailyVisitors(since(7))),
+    month: sum(m30),
+    sources: group("source"),
+    devices: group("device"),
+    top: Array.from(per, ([storyId, v]) => ({ storyId, ...v }))
+      .sort((a, b) => b.clicks - a.clicks || b.views - a.views)
+      .slice(0, 10),
+    days: Array.from({ length: 30 }, (_, i) => dayBefore(today, 29 - i)).map((d) => ({ day: d, visitors: m30.get(d)?.size ?? 0 })),
   };
 }

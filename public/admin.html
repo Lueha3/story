@@ -94,6 +94,37 @@
 .cat-row { gap: 0 6px; padding-top: 2px; }
 .cat-row .chip > span { height: 30px; padding: 0 11px; font-size: 13px; }
 #admOrder b { font-weight: 700; }
+.view-tabs { gap: 0 8px; }
+#work.on-stats .adm > section:not(.stats-view), #work.on-stories .stats-view { display: none !important; }
+.stats-view { display: flex; flex-direction: column; gap: 14px; }
+.stats-h { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.stats-h h2 { margin: 0; font-size: 18px; }
+.adm h2 small { font-size: 12px; font-weight: 500; color: var(--fg-2); margin-left: 4px; }
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.kpi { padding: 12px 14px; border: 1px solid var(--line-2); border-radius: 14px; background: var(--raise); display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.kpi span { font-size: 12px; color: var(--fg-2); }
+.kpi b { font-size: 24px; line-height: 1.1; font-weight: 700; font-variant-numeric: tabular-nums; }
+.kpi small { font-size: 12px; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.kpi.live b::before { content: ""; display: inline-block; width: 8px; height: 8px; margin: 0 6px 4px 0; border-radius: 50%; background: #2fbf71; vertical-align: middle; }
+.spark { display: flex; align-items: flex-end; gap: 3px; height: 110px; }
+.spark i { flex: 1; min-width: 0; border-radius: 3px 3px 0 0; background: var(--fg); opacity: 0.85; min-height: 2px; }
+.spark i.today { background: var(--accent); opacity: 1; }
+.spark-x { display: flex; justify-content: space-between; font-size: 11px; color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.two { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr)); gap: 14px; }
+.bars { display: flex; flex-direction: column; gap: 8px; }
+.bar { display: grid; grid-template-columns: 84px 1fr 44px; align-items: center; gap: 8px; font-size: 13px; }
+.bar em { font-style: normal; height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; display: block; }
+.bar em i { display: block; height: 100%; background: var(--fg); border-radius: 5px; }
+.bar b { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.top { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; }
+.top li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.top li:last-child { border-bottom: 0; }
+.top .tn { width: 18px; flex: none; font-size: 13px; font-weight: 700; color: var(--fg-2); text-align: right; }
+.top img { width: 40px; height: 56px; flex: none; object-fit: cover; border-radius: 4px; background: var(--raise); }
+.top .tt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; }
+.top .tt b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.top .tt span { color: var(--fg-2); font-variant-numeric: tabular-nums; }
+.empty-s { margin: 0; font-size: 13px; color: var(--fg-2); }
 </style>
 </head>
 <body>
@@ -114,6 +145,34 @@
 
     <div id="work" hidden>
       <div class="adm" style="padding:0">
+        <nav class="row view-tabs" role="tablist" aria-label="관리 화면">
+          <button type="button" class="pill chip" role="tab" data-view="stories" aria-pressed="true" aria-selected="true"><span>스토리 관리</span></button>
+          <button type="button" class="pill chip" role="tab" data-view="stats" aria-pressed="false" aria-selected="false"><span>이용자</span></button>
+        </nav>
+
+        <section class="stats-view" id="statsView" hidden>
+          <div class="stats-h">
+            <h2>이용자</h2>
+            <button type="button" class="pill" id="statsReload"><span>새로고침</span></button>
+          </div>
+          <p class="hint">누가 왔는지는 알 수 없게, 하루 단위 익명 번호로만 세요. 1분마다 저절로 새로 고쳐요.</p>
+          <div class="kpis" id="kpis"></div>
+          <div class="box">
+            <h2>최근 30일 방문자</h2>
+            <div class="spark" id="spark" role="img" aria-label="최근 30일 방문자 막대그래프"></div>
+            <div class="spark-x" id="sparkX"></div>
+          </div>
+          <div class="two">
+            <div class="box"><h2>어디서 왔나요 <small>30일</small></h2><div class="bars" id="sources"></div></div>
+            <div class="box"><h2>기기 <small>30일</small></h2><div class="bars" id="devices"></div></div>
+          </div>
+          <div class="box">
+            <h2>많이 눌린 상품 TOP 10 <small>30일</small></h2>
+            <ol class="top" id="top"></ol>
+          </div>
+          <p class="msg" id="statsMsg"></p>
+        </section>
+
         <section class="box" id="healthBox">
           <h2>연결 상태</h2>
           <ul class="health" id="health"></ul>
@@ -205,6 +264,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795429442"></script>
+<script src="/admin.js?v=1795433903"></script>
 </body>
 </html>

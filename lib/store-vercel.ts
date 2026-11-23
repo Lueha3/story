@@ -1,6 +1,7 @@
 import { neon } from "@neondatabase/serverless";
 import { del, get, put } from "@vercel/blob";
 import { blobConfigured, blobStoreId, blobToken } from "./env";
+import { dayBefore, type Stats } from "./stats";
 import type { Store } from "./store";
 import type { Category, QueuedLink, Story, StoryStatus } from "./types";
 
@@ -126,6 +127,18 @@ export function createVercelStore(databaseUrl: string): Store {
         await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS time_sale boolean NOT NULL DEFAULT false`;
         await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS sale_state text`;
         await sql`CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, value text NOT NULL)`;
+        await sql`CREATE TABLE IF NOT EXISTS events (
+          id bigserial PRIMARY KEY,
+          ts timestamptz NOT NULL,
+          day text NOT NULL,
+          type text NOT NULL,
+          story_id text,
+          visitor text NOT NULL,
+          source text NOT NULL,
+          device text NOT NULL
+        )`;
+        await sql`CREATE INDEX IF NOT EXISTS events_day ON events (day)`;
+        await sql`CREATE INDEX IF NOT EXISTS events_ts ON events (ts)`;
         await sql`CREATE TABLE IF NOT EXISTS links (
           id text PRIMARY KEY,
           url text NOT NULL,
@@ -187,6 +200,55 @@ export function createVercelStore(databaseUrl: string): Store {
       await init();
       await sql`DELETE FROM stories WHERE id = ${id}`;
       await sql`UPDATE links SET story_id = NULL WHERE story_id = ${id}`;
+    },
+    async addEvent(e) {
+      await init();
+      await sql`INSERT INTO events (ts, day, type, story_id, visitor, source, device)
+        VALUES (${e.ts}, ${e.day}, ${e.type}, ${e.storyId}, ${e.visitor}, ${e.source}, ${e.device})`;
+    },
+    async pruneEvents(beforeDay) {
+      await init();
+      await sql`DELETE FROM events WHERE day < ${beforeDay}`;
+    },
+    async stats(today) {
+      await init();
+      const yesterday = dayBefore(today, 1);
+      const d7 = dayBefore(today, 6);
+      const d30 = dayBefore(today, 29);
+      const n = (v: unknown) => Number(v ?? 0);
+      const [nowRows, dayRows, sumRows, srcRows, devRows, topRows, dailyRows] = await Promise.all([
+        sql`SELECT count(DISTINCT visitor) AS n FROM events WHERE ts > now() - interval '5 minutes'`,
+        sql`SELECT day, count(DISTINCT visitor) AS visitors,
+              count(*) FILTER (WHERE type = 'visit') AS visits,
+              count(*) FILTER (WHERE type = 'view') AS views,
+              count(*) FILTER (WHERE type = 'click') AS clicks
+            FROM events WHERE day IN (${today}, ${yesterday}) GROUP BY day`,
+        sql`SELECT coalesce(sum(v) FILTER (WHERE day >= ${d7}), 0) AS week, coalesce(sum(v), 0) AS month
+            FROM (SELECT day, count(DISTINCT visitor) AS v FROM events WHERE day >= ${d30} GROUP BY day) t`,
+        sql`SELECT source AS key, count(DISTINCT day || visitor) AS visitors FROM events WHERE day >= ${d30} GROUP BY source ORDER BY 2 DESC`,
+        sql`SELECT device AS key, count(DISTINCT day || visitor) AS visitors FROM events WHERE day >= ${d30} GROUP BY device ORDER BY 2 DESC`,
+        sql`SELECT story_id, count(*) FILTER (WHERE type = 'view') AS views, count(*) FILTER (WHERE type = 'click') AS clicks
+            FROM events WHERE story_id IS NOT NULL AND day >= ${d30} GROUP BY story_id
+            ORDER BY clicks DESC, views DESC LIMIT 10`,
+        sql`SELECT day, count(DISTINCT visitor) AS visitors FROM events WHERE day >= ${d30} GROUP BY day`,
+      ]);
+      const pick = (day: string) => {
+        const r = (dayRows as Row[]).find((x) => x.day === day);
+        return { visitors: n(r?.visitors), visits: n(r?.visits), views: n(r?.views), clicks: n(r?.clicks) };
+      };
+      const daily = new Map((dailyRows as Row[]).map((r) => [String(r.day), n(r.visitors)]));
+      const out: Stats = {
+        now: n((nowRows as Row[])[0]?.n),
+        today: pick(today),
+        yesterday: pick(yesterday),
+        week: n((sumRows as Row[])[0]?.week),
+        month: n((sumRows as Row[])[0]?.month),
+        sources: (srcRows as Row[]).map((r) => ({ key: String(r.key), visitors: n(r.visitors) })),
+        devices: (devRows as Row[]).map((r) => ({ key: String(r.key), visitors: n(r.visitors) })),
+        top: (topRows as Row[]).map((r) => ({ storyId: String(r.story_id), views: n(r.views), clicks: n(r.clicks) })),
+        days: Array.from({ length: 30 }, (_, i) => dayBefore(today, 29 - i)).map((d) => ({ day: d, visitors: daily.get(d) ?? 0 })),
+      };
+      return out;
     },
     async getSetting(key) {
       await init();

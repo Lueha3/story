@@ -70,6 +70,16 @@
     toastTimer = setTimeout(() => { toast.hidden = true; }, 2400);
   }
 
+  // ---- visit counting (anonymous; see /api/track) ----
+  function track(type, storyId) {
+    const body = JSON.stringify({ type: type, storyId: storyId || null, referrer: document.referrer || '' });
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon('/api/track', new Blob([body], { type: 'text/plain' }))) return;
+    } catch (e) { /* fall through */ }
+    fetch('/api/track', { method: 'POST', body: body, keepalive: true }).catch(() => {});
+  }
+  const viewed = new Set();
+
   // ---- tabs and feed ----
   const feed = $('feed');
   const tabsEl = document.querySelector('.tabs');
@@ -231,6 +241,7 @@
   function show(flag) {
     const s = seq[pos];
     $('vMarks').innerHTML = marksHTML(s);
+    if (!viewed.has(s.id)) { viewed.add(s.id); track('view', s.id); }
     const run = runOf(pos);
     const at = pos - run[0];
     const len = run[1] - run[0] + 1;
@@ -412,7 +423,7 @@
   $('vPrev').addEventListener('click', (e) => { if (e.detail === 0) step(-1); });
   $('vNext').addEventListener('click', (e) => { if (e.detail === 0) step(1); });
   vClose.addEventListener('click', closeViewer);
-  vCta.addEventListener('click', () => { paused = true; setTimeout(() => { paused = false; }, 1500); });
+  vCta.addEventListener('click', () => { track('click', seq[pos] && seq[pos].id); paused = true; setTimeout(() => { paused = false; }, 1500); });
   document.addEventListener('keydown', (e) => {
     if (viewer.hidden) return;
     if (e.key === 'Escape') closeViewer();
@@ -443,5 +454,6 @@
     if (first) openFromHash();
   }
   refresh(true);
+  track('visit');
   setInterval(() => { if (!document.hidden) refresh(false); }, 60 * 1000);
 })();

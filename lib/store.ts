@@ -1,4 +1,5 @@
 import { databaseUrl, onVercel } from "./env";
+import type { Stats, VisitEvent } from "./stats";
 import type { QueuedLink, Story } from "./types";
 
 /**
@@ -13,6 +14,12 @@ export interface Store {
   insertStory(story: Story): Promise<void>;
   updateStory(id: string, patch: Partial<Story>): Promise<Story | null>;
   deleteStory(id: string): Promise<void>;
+
+  addEvent(e: VisitEvent): Promise<void>;
+  /** totals for the admin page, as of the given Korea-time day */
+  stats(today: string): Promise<Stats>;
+  /** removes visit records older than the given day */
+  pruneEvents(beforeDay: string): Promise<void>;
 
   getSetting(key: string): Promise<string | null>;
   setSetting(key: string, value: string): Promise<void>;
