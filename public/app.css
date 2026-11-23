@@ -1,3 +1,21 @@
+@font-face {
+  font-family: 'GmarketSans';
+  font-weight: 700;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+}
+@font-face {
+  font-family: 'GmarketSans';
+  font-weight: 500;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+}
+@font-face {
+  font-family: 'GmarketSans';
+  font-weight: 300;
+  font-display: swap;
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansLight.woff') format('woff');
+}
 /* Layout: phone-first single column (max 480px). Sticky category tabs, full-bleed 3-column grid of 9:16
    story tiles grouped by category, and a fixed full-screen story viewer. */
 :root {
@@ -26,9 +44,7 @@
   --paper: #ffffff;
   --ink: #111111;
   --sale: #d81f3c;
-  --font: Geist, -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
-  --mono: 'Geist Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  --serif: AppleMyungjo, 'Nanum Myeongjo', 'Noto Serif KR', Batang, serif;
+  --font: 'GmarketSans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
@@ -80,6 +96,9 @@ body::before {
   height: env(safe-area-inset-top, 0px);
   z-index: 10;
   background: var(--bg);
+}
+input, select, textarea, ::file-selector-button {
+  font-family: inherit;
 }
 button {
   appearance: none;
@@ -257,7 +276,6 @@ svg {
   font-size: 14px;
 }
 .chip small {
-  font-family: var(--mono);
   font-size: 12px;
   font-weight: 500;
   color: var(--fg-2);
@@ -295,7 +313,6 @@ svg {
 }
 .sec-t span,
 .sort {
-  font-family: var(--mono);
   font-size: 12px;
   line-height: 1.3;
   color: var(--fg-2);
@@ -329,7 +346,6 @@ svg {
   gap: 5px;
   height: 20px;
   padding: 0 4px;
-  font-family: var(--mono);
   font-size: 11px;
   line-height: 1;
   color: var(--fg-2);
@@ -619,7 +635,6 @@ svg {
   white-space: nowrap;
 }
 .v-info span:last-child {
-  font-family: var(--mono);
   white-space: nowrap;
 }
 
@@ -1078,36 +1093,11 @@ a.cta {
   opacity: 0.85;
 }
 
-/* the product button is set in Gmarket Sans */
-@font-face {
-  font-family: 'GmarketSans';
-  font-weight: 700;
-  font-display: swap;
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
-}
-@font-face {
-  font-family: 'GmarketSans';
-  font-weight: 500;
-  font-display: swap;
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
-}
 .cta {
-  font-family: 'GmarketSans', var(--font);
   font-weight: 700;
   padding-top: 2px;
 }
 
-/* the whole site is set in Gmarket Sans */
-@font-face {
-  font-family: 'GmarketSans';
-  font-weight: 300;
-  font-display: swap;
-  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansLight.woff') format('woff');
-}
-:root {
-  --font: 'GmarketSans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
-  --mono: 'GmarketSans', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', system-ui, sans-serif;
-}
 body {
   font-weight: 500;
 }
