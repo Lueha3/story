@@ -90,6 +90,9 @@
 .mk-btn[data-mk="soldout"][aria-pressed="true"] > span,
 .mk-btn[data-mk="expired"][aria-pressed="true"] > span { background: #2a2826; border: 1px solid #2a2826; color: #ffffff; }
 .reg-thumb .card { position: relative; }
+.cat-row { gap: 0 6px; padding-top: 2px; }
+.cat-row .chip > span { height: 30px; padding: 0 11px; font-size: 13px; }
+#admOrder b { font-weight: 700; }
 </style>
 </head>
 <body>
@@ -146,7 +149,7 @@
 
         <section class="box">
           <h2>링크 한꺼번에 넣기</h2>
-          <p class="hint">링크가 든 글을 그대로 붙여넣으세요. AI가 링크 위 설명과 스토리 사진을 비교해 짝을 찾아요(아래 목록의 지금 고른 탭에서). 설명이 없는 링크는 순서대로 짝짓기를 쓰면 돼요. 넣기 전에 짝을 확인할 수 있어요.</p>
+          <p class="hint">링크가 든 글을 그대로 붙여넣으세요. AI가 링크 위 설명과 스토리 사진을 비교해 짝을 찾아요. 짝을 찾는 대상은 아래 목록에 지금 보이는 스토리(탭, 카테고리, 정렬 그대로)예요. 설명이 없는 링크는 순서대로 짝짓기를 쓰면 돼요. 넣기 전에 짝을 확인할 수 있어요.</p>
           <label class="bulk-l" for="bulkText">링크 글</label>
           <textarea id="bulkText" rows="6" placeholder="https://..."></textarea>
           <div class="row">
@@ -165,6 +168,12 @@
             <button type="button" class="pill chip" data-f="nolink" aria-pressed="false"><span>링크 없음<small id="cntNolink">0</small></span></button>
             <button type="button" class="pill chip" data-f="all" aria-pressed="false"><span>전체<small id="cntAll">0</small></span></button>
             <button type="button" class="pill chip" data-f="hidden" aria-pressed="false"><span>숨김<small id="cntHidden">0</small></span></button>
+          </div>
+          <div class="row cat-row" role="group" aria-label="카테고리" id="catRow"></div>
+          <div class="row">
+            <button type="button" class="pill" id="admOrder" aria-label="정렬 순서 바꾸기"><span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16"></path><path d="M3 16l4 4 4-4"></path><path d="M17 20V4"></path><path d="M13 8l4-4 4 4"></path></svg>
+              <b id="admOrderLabel">올린 순서</b></span></button>
           </div>
           <div class="selbar">
             <button type="button" class="pill" id="selToggle"><span>선택</span></button>
@@ -195,6 +204,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795427647"></script>
+<script src="/admin.js?v=1795427857"></script>
 </body>
 </html>

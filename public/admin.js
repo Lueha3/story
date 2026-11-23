@@ -12,6 +12,9 @@
   try { token = localStorage.getItem(KEY) || ''; } catch (e) { /* storage blocked */ }
   let stories = [];
   let filter = 'check';
+  // category and order for the list; upload order (oldest first) is the default, as link pairing needs it
+  let catFilter = 'all';
+  let newestFirst = false;
   let armedDelete = null;
   let selecting = false;
   const sel = new Set();
@@ -41,11 +44,23 @@
     return d.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
-  function visible() {
+  function byStatus() {
     if (filter === 'check') return stories.filter((s) => !s.hidden && (!s.sure || s.status === 'failed'));
     if (filter === 'nolink') return stories.filter((s) => !s.hidden && !s.link && s.status !== 'pending');
     if (filter === 'hidden') return stories.filter((s) => s.hidden);
     return stories;
+  }
+  function visible() {
+    const l = byStatus().filter((s) => catFilter === 'all' || s.category === catFilter);
+    return newestFirst ? l.slice().reverse() : l;
+  }
+  function drawCats() {
+    const base = byStatus();
+    $('catRow').innerHTML = [['all', '전체']].concat(CATS).map((c) => {
+      const n = c[0] === 'all' ? base.length : base.filter((s) => s.category === c[0]).length;
+      return '<button type="button" class="pill chip" data-cf="' + c[0] + '" aria-pressed="' + (catFilter === c[0]) + '"><span>' + c[1] + '<small>' + n + '</small></span></button>';
+    }).join('');
+    $('admOrderLabel').textContent = newestFirst ? '최신순' : '올린 순서';
   }
 
   // the same stickers the site draws, small, on the admin thumbnail
@@ -65,6 +80,7 @@
     $('cntAll').textContent = stories.length;
     $('cntHidden').textContent = stories.filter((s) => s.hidden).length;
     document.querySelectorAll('[data-f]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.f === filter)));
+    drawCats();
     drawSelBar();
     const rows = visible();
     if (!rows.length) {
@@ -203,6 +219,17 @@
   });
 
   document.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => { filter = b.dataset.f; render(); }));
+  $('catRow').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-cf]');
+    if (!b) return;
+    catFilter = b.dataset.cf;
+    render();
+  });
+  $('admOrder').addEventListener('click', () => {
+    newestFirst = !newestFirst;
+    render();
+    say(newestFirst ? '최신순으로 바꿨어요' : '올린 순서(오래된 것부터)로 바꿨어요');
+  });
 
   // ---- many links at once ----
   // Reads every link from pasted text in order, each with the line of text above it as a hint,
