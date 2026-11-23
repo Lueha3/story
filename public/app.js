@@ -42,7 +42,13 @@
     s.isNew = Date.now() - t <= 60 * MIN;
     return s;
   }
-  const listOf = (cat) => STORIES.filter((s) => s.cat === cat);
+  // newest first by default; a visitor can flip it to oldest first, and the choice is remembered
+  let oldestFirst = false;
+  try { oldestFirst = localStorage.getItem('honey-order') === 'old'; } catch (e) { /* storage blocked */ }
+  const listOf = (cat) => {
+    const l = STORIES.filter((s) => s.cat === cat);
+    return oldestFirst ? l.reverse() : l;
+  };
 
   async function load() {
     const res = await fetch('/api/stories', { cache: 'no-store' });
@@ -100,7 +106,7 @@
       });
     } else {
       const list = listOf(tab);
-      html = '<section><div class="sec-h gut"><div class="sec-t"><h2>' + CAT_LABEL[tab] + '</h2><span>' + list.length + '개</span></div><span class="sort">최신순</span></div>' +
+      html = '<section><div class="sec-h gut"><div class="sec-t"><h2>' + CAT_LABEL[tab] + '</h2><span>' + list.length + '개</span></div><span class="sort">' + (oldestFirst ? '오래된순' : '최신순') + '</span></div>' +
         (list.length ? '<div class="grid">' + list.map(tileHTML).join('') + '</div>' : '<p class="empty gut">아직 이 카테고리에 올라온 스토리가 없어요.</p>') +
         '</section>';
     }
@@ -134,6 +140,18 @@
     const ago = diff < 1 ? '방금 전' : (diff < 60 ? diff + '분 전' : (diff < 1440 ? Math.floor(diff / 60) + '시간 전' : Math.floor(diff / 1440) + '일 전'));
     $('statusText').textContent = ago + ' 업데이트 · 지난 꿀템도 전부 볼 수 있어요';
   }
+
+  function drawOrder() {
+    $('orderLabel').textContent = oldestFirst ? '오래된순' : '최신순';
+    $('orderBtn').setAttribute('aria-label', '정렬: ' + (oldestFirst ? '오래된순' : '최신순') + '. 눌러서 바꾸기');
+  }
+  drawOrder();
+  $('orderBtn').addEventListener('click', () => {
+    oldestFirst = !oldestFirst;
+    try { localStorage.setItem('honey-order', oldestFirst ? 'old' : 'new'); } catch (e) { /* storage blocked */ }
+    drawOrder();
+    renderFeed();
+  });
 
   tabsList.addEventListener('click', (e) => {
     const chip = e.target.closest('.chip');

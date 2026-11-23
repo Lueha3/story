@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="description" content="인스타 스토리에 올린 꿀템을 카테고리별로 모아보는 곳">
 <title>실시간 꿀템 리딩방</title>
-<link rel="stylesheet" href="/app.css?v=gmarket-sans">
+<link rel="stylesheet" href="/app.css?v=1795420883">
 <style>
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 [hidden] { display: none !important; }
@@ -29,6 +29,10 @@
   <div id="tabsAnchor"></div>
   <nav class="tabs" aria-label="카테고리">
     <div class="tabs-list" id="tabsList"></div>
+    <button type="button" class="order-btn" id="orderBtn" aria-label="정렬 순서 바꾸기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16"></path><path d="M3 16l4 4 4-4"></path><path d="M17 20V4"></path><path d="M13 8l4-4 4 4"></path></svg>
+      <span id="orderLabel">최신순</span>
+    </button>
   </nav>
 
   <main id="feed"><p class="loading gut">스토리를 불러오는 중이에요.</p></main>
@@ -80,6 +84,6 @@
 </div>
 
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/app.js?v=1795386243"></script>
+<script src="/app.js?v=1795420883"></script>
 </body>
 </html>

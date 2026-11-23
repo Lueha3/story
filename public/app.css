@@ -1123,3 +1123,22 @@ body {
   height: 100%;
   object-fit: cover;
 }
+
+/* newest / oldest first switch at the end of the category bar */
+.order-btn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  height: 44px;
+  padding: 0 max(14px, env(safe-area-inset-right, 0px)) 0 12px;
+  border-left: 1px solid var(--line);
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.order-btn svg {
+  width: 16px;
+  height: 16px;
+}
