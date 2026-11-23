@@ -2,7 +2,8 @@
   'use strict';
 
   const $ = (id) => document.getElementById(id);
-  const CATS = [['top', '상의'], ['bottom', '하의'], ['outer', '아우터'], ['shoes', '신발'], ['acc', 'ACC'], ['etc', '기타']];
+  // order of the tabs and of the sections on the 전체 view
+  const CATS = [['outer', '아우터'], ['top', '상의'], ['bottom', '하의'], ['shoes', '신발'], ['acc', 'ACC'], ['etc', '기타']];
   const CAT_LABEL = {};
   CATS.forEach((c) => { CAT_LABEL[c[0]] = c[1]; });
   const WEEK = ['일', '월', '화', '수', '목', '금', '토'];
