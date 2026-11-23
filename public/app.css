@@ -1153,3 +1153,26 @@ body {
     cursor: grabbing;
   }
 }
+
+/* the product link button: a white rounded card with a blue open-in-new icon, as designed */
+.v-bottom a.cta {
+  height: 56px;
+  gap: 14px;
+  border-radius: 16px;
+  background: #ffffff;
+  color: #000000;
+  font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', system-ui, sans-serif;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  padding-top: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08), 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+.v-bottom a.cta svg {
+  width: 24px;
+  height: 24px;
+  color: #0a66ff;
+}
+.v-bottom a.cta:active {
+  background: #f2f2f2;
+}
