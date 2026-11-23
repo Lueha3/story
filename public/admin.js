@@ -680,18 +680,6 @@
     reload().catch(() => {});
   });
 
-  $('addLink').addEventListener('click', async () => {
-    const url = $('linkUrl').value.trim();
-    if (!url) return;
-    try {
-      const d = await api('/api/links', { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: url });
-      $('linkMsg').textContent = d.message + (d.attachedTo && d.attachedTo.itemName ? ' (' + d.attachedTo.itemName + ')' : '');
-      $('linkUrl').value = '';
-      reload().catch(() => {});
-    } catch (err) {
-      $('linkMsg').textContent = err.message;
-    }
-  });
 
   // ---- visitors tab ----
   const SRC = { instagram: '인스타그램', kakao: '카카오톡', direct: '직접 입력', other: '기타' };
