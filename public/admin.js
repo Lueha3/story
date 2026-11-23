@@ -69,7 +69,7 @@
     let h = '';
     if (s.saleState === 'soldout' || s.saleState === 'expired') {
       const sold = s.saleState === 'soldout';
-      h += '<div class="mk-over ' + (sold ? 'is-sold' : 'is-exp') + '"><div class="mk-stamp"><b>' + (sold ? '품절' : '기간 만료') + '</b></div></div>';
+      h += '<div class="mk-over ' + (sold ? 'is-sold' : 'is-exp') + '"><div class="mk-stamp"><b>' + (sold ? '품절' : '기간만료') + '</b></div></div>';
     }
     if (s.timeSale) h += '<div class="mk-sale"><i class="mk-dot"></i><b>타임세일</b></div>';
     return h;
@@ -106,7 +106,7 @@
         '<div class="reg-mk" role="group" aria-label="사진 위 표시">' +
         '<button type="button" class="mk-btn" data-mk="sale" aria-pressed="' + Boolean(s.timeSale) + '"><span>타임세일</span></button>' +
         '<button type="button" class="mk-btn" data-mk="soldout" aria-pressed="' + (s.saleState === 'soldout') + '"><span>품절</span></button>' +
-        '<button type="button" class="mk-btn" data-mk="expired" aria-pressed="' + (s.saleState === 'expired') + '"><span>기간 만료</span></button>' +
+        '<button type="button" class="mk-btn" data-mk="expired" aria-pressed="' + (s.saleState === 'expired') + '"><span>기간만료</span></button>' +
         '</div>' +
         '<div class="reg-l"><input type="url" value="' + esc(s.link || '') + '" placeholder="상품링크 붙여넣기" aria-label="상품링크">' +
         '<button type="button" class="pill" data-act="link"><span>저장</span></button></div>' +
@@ -388,7 +388,7 @@
         else patch = { saleState: s.saleState === mk.dataset.mk ? null : mk.dataset.mk };
         await update(s, patch);
         render();
-        const names = { sale: '타임세일', soldout: '품절', expired: '기간 만료' };
+        const names = { sale: '타임세일', soldout: '품절', expired: '기간만료' };
         const on = mk.dataset.mk === 'sale' ? s.timeSale : s.saleState === mk.dataset.mk;
         say(names[mk.dataset.mk] + (on ? ' 표시를 붙였어요' : ' 표시를 뗐어요'));
         return;

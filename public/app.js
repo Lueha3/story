@@ -91,12 +91,12 @@
     if (s.saleState === 'soldout' || s.saleState === 'expired') {
       const sold = s.saleState === 'soldout';
       h += '<div class="mk-over ' + (sold ? 'is-sold' : 'is-exp') + '"><div class="mk-stamp">' +
-        '<b>' + (sold ? '품절' : '기간 만료') + '</b></div></div>';
+        '<b>' + (sold ? '품절' : '기간만료') + '</b></div></div>';
     }
     if (s.timeSale) h += '<div class="mk-sale"><i class="mk-dot"></i>' + CLOCK_ICON + '<b>타임세일</b></div>';
     return h;
   }
-  const marksLabel = (s) => (s.timeSale ? ', 타임세일' : '') + (s.saleState === 'soldout' ? ', 품절' : s.saleState === 'expired' ? ', 기간 만료' : '');
+  const marksLabel = (s) => (s.timeSale ? ', 타임세일' : '') + (s.saleState === 'soldout' ? ', 품절' : s.saleState === 'expired' ? ', 기간만료' : '');
 
   function tileHTML(s) {
     const label = CAT_LABEL[s.cat] + (s.itemName ? ', ' + s.itemName : '') + marksLabel(s) + ', ' + s.md + ' ' + s.clock + ' 스토리 열기';
