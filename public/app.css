@@ -1176,3 +1176,118 @@ body {
 .v-bottom a.cta:active {
   background: #f2f2f2;
 }
+
+/* ---- stickers over a story: time sale, sold out, expired ----
+   Sized in cqw so one design works on a small tile and a full-screen story. */
+.card {
+  container-type: inline-size;
+}
+.v-marks {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.mk-sale,
+.mk-over {
+  pointer-events: none;
+}
+.mk-sale {
+  --mk-top: 5cqw;
+  position: absolute;
+  z-index: 3;
+  top: var(--mk-top);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1.4cqw;
+  padding: 1.6cqw 3.4cqw 1.6cqw 2.6cqw;
+  border-radius: 99px;
+  background: #ffe14a;
+  color: #141312;
+  box-shadow: 0 0.6cqw 2.4cqw rgba(0, 0, 0, 0.35), inset 0 0 0 0.35cqw rgba(20, 19, 18, 0.9);
+  white-space: nowrap;
+}
+.mk-sale svg {
+  width: 4.6cqw;
+  height: 4.6cqw;
+}
+.mk-sale b {
+  font-family: 'GmarketSans', var(--font);
+  font-size: 4.2cqw;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  padding-top: 0.3cqw;
+}
+.mk-dot {
+  width: 1.6cqw;
+  height: 1.6cqw;
+  border-radius: 50%;
+  background: #e8202a;
+  box-shadow: 0 0 0 0 rgba(232, 32, 42, 0.6);
+  animation: mk-pulse 1.6s ease-out infinite;
+}
+@keyframes mk-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(232, 32, 42, 0.55); }
+  70% { box-shadow: 0 0 0 2.4cqw rgba(232, 32, 42, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(232, 32, 42, 0); }
+}
+.mk-over {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: rgba(10, 9, 8, 0.46);
+  -webkit-backdrop-filter: grayscale(0.9);
+  backdrop-filter: grayscale(0.9);
+}
+.mk-stamp {
+  position: absolute;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%) rotate(-7deg);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1cqw;
+  padding: 3cqw 6cqw 2.6cqw;
+  border: 0.9cqw solid currentColor;
+  border-radius: 2cqw;
+  outline: 0.35cqw solid currentColor;
+  outline-offset: 0.9cqw;
+  color: #ffffff;
+  white-space: nowrap;
+  text-shadow: 0 0.3cqw 1.2cqw rgba(0, 0, 0, 0.35);
+}
+.mk-stamp b {
+  font-family: 'GmarketSans', var(--font);
+  font-size: 10cqw;
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+.mk-stamp span {
+  font-family: 'GmarketSans', var(--font);
+  font-size: 3.6cqw;
+  line-height: 1;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  padding-left: 0.3em;
+}
+.mk-over.is-exp .mk-stamp {
+  color: #e6e1d8;
+}
+.mk-over.is-exp .mk-stamp b {
+  font-size: 9cqw;
+  letter-spacing: 0.02em;
+}
+/* in the full-screen story the time sale sits just under the header */
+.v-card .mk-sale {
+  --mk-top: calc(env(safe-area-inset-top, 0px) + 66px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .mk-dot {
+    animation: none;
+  }
+}

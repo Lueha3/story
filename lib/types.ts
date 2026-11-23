@@ -18,6 +18,8 @@ export interface LinkBox {
   h: number;
 }
 
+export type SaleState = "soldout" | "expired" | null;
+
 export type StoryStatus = "pending" | "done" | "failed";
 
 export interface Story {
@@ -43,6 +45,9 @@ export interface Story {
   linkBox: LinkBox | null;
   /** true once the AI has looked for the sticker (found or not), so it is not asked again. */
   stickerChecked: boolean;
+  /** Marks shown on the picture: a time sale, and whether the deal is over. */
+  timeSale?: boolean;
+  saleState?: SaleState;
 }
 
 export interface QueuedLink {
@@ -62,6 +67,8 @@ export interface PublicStory {
   priceText: string;
   link: string | null;
   linkBox: LinkBox | null;
+  timeSale: boolean;
+  saleState: SaleState;
 }
 
 export function toPublic(s: Story): PublicStory {
@@ -74,6 +81,8 @@ export function toPublic(s: Story): PublicStory {
     priceText: s.priceText,
     link: s.link,
     linkBox: s.linkBox ?? null,
+    timeSale: Boolean(s.timeSale),
+    saleState: s.saleState ?? null,
   };
 }
 

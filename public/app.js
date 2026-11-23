@@ -84,10 +84,24 @@
     });
     tabsList.innerHTML = html;
   }
+  // Stickers over a story picture: time sale at the top, sold out / expired as a stamp a little above the middle.
+  const CLOCK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/><path d="M9.5 2.5h5"/></svg>';
+  function marksHTML(s) {
+    let h = '';
+    if (s.saleState === 'soldout' || s.saleState === 'expired') {
+      const sold = s.saleState === 'soldout';
+      h += '<div class="mk-over ' + (sold ? 'is-sold' : 'is-exp') + '"><div class="mk-stamp">' +
+        '<b>' + (sold ? 'SOLD OUT' : '기간 만료') + '</b><span>' + (sold ? '품절' : 'EXPIRED') + '</span></div></div>';
+    }
+    if (s.timeSale) h += '<div class="mk-sale"><i class="mk-dot"></i>' + CLOCK_ICON + '<b>TIME SALE</b></div>';
+    return h;
+  }
+  const marksLabel = (s) => (s.timeSale ? ', 타임세일' : '') + (s.saleState === 'soldout' ? ', 품절' : s.saleState === 'expired' ? ', 기간 만료' : '');
+
   function tileHTML(s) {
-    const label = CAT_LABEL[s.cat] + (s.itemName ? ', ' + s.itemName : '') + ', ' + s.md + ' ' + s.clock + ' 스토리 열기';
+    const label = CAT_LABEL[s.cat] + (s.itemName ? ', ' + s.itemName : '') + marksLabel(s) + ', ' + s.md + ' ' + s.clock + ' 스토리 열기';
     return '<button type="button" class="tile" data-id="' + esc(s.id) + '" aria-label="' + esc(label) + '">' +
-      '<div class="card"><img src="' + esc(s.imageUrl) + '" alt="" loading="lazy" decoding="async"></div>' +
+      '<div class="card"><img src="' + esc(s.imageUrl) + '" alt="" loading="lazy" decoding="async">' + marksHTML(s) + '</div>' +
       '<span class="tile-t"><span>' + s.rel + '</span>' + (s.isNew ? '<span class="new">NEW</span>' : '') + '</span></button>';
   }
   function renderFeed() {
@@ -216,6 +230,7 @@
   }
   function show(flag) {
     const s = seq[pos];
+    $('vMarks').innerHTML = marksHTML(s);
     const run = runOf(pos);
     const at = pos - run[0];
     const len = run[1] - run[0] + 1;

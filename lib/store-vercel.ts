@@ -29,6 +29,8 @@ function rowToStory(r: Row): Story {
     status: r.status as StoryStatus,
     linkBox: parseBox(r.link_box),
     stickerChecked: Boolean(r.sticker_checked),
+    timeSale: Boolean(r.time_sale),
+    saleState: r.sale_state === "soldout" || r.sale_state === "expired" ? r.sale_state : null,
   };
 }
 
@@ -68,6 +70,8 @@ const STORY_COLS: Record<keyof Story, string> = {
   status: "status",
   linkBox: "link_box",
   stickerChecked: "sticker_checked",
+  timeSale: "time_sale",
+  saleState: "sale_state",
 };
 
 const LINK_COLS: Record<keyof QueuedLink, string> = {
@@ -119,6 +123,8 @@ export function createVercelStore(databaseUrl: string): Store {
         )`;
         await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS link_box text`;
         await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS sticker_checked boolean NOT NULL DEFAULT false`;
+        await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS time_sale boolean NOT NULL DEFAULT false`;
+        await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS sale_state text`;
         await sql`CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, value text NOT NULL)`;
         await sql`CREATE TABLE IF NOT EXISTS links (
           id text PRIMARY KEY,

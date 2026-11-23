@@ -32,6 +32,12 @@ export async function PATCH(req: Request, ctx: Ctx) {
     }
   }
   if ("hidden" in body) patch.hidden = Boolean(body.hidden);
+  if ("timeSale" in body) patch.timeSale = Boolean(body.timeSale);
+  if ("saleState" in body) {
+    const v = body.saleState;
+    if (v !== null && v !== "soldout" && v !== "expired") return Response.json({ error: "없는 표시예요." }, { status: 400 });
+    patch.saleState = v;
+  }
   if ("itemName" in body && typeof body.itemName === "string") patch.itemName = body.itemName.trim().slice(0, 80);
 
   const store = await getStore();

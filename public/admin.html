@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>리딩방 관리</title>
-<link rel="stylesheet" href="/app.css?v=gmarket-sans">
+<link rel="stylesheet" href="/app.css?v=1795427647">
 <style>
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 [hidden] { display: none !important; }
@@ -83,6 +83,13 @@
 .bulk .why { color: var(--fg-3); font-size: 12px; }
 .bulk .flag { font-style: normal; font-size: 11px; color: #e0566c; }
 .bulk li.unsure { background: rgba(224, 86, 108, 0.06); }
+.reg-mk { display: flex; flex-wrap: wrap; gap: 0 6px; }
+.mk-btn { height: 44px; display: flex; align-items: center; }
+.mk-btn > span { display: flex; align-items: center; height: 30px; box-sizing: border-box; padding: 0 11px; border-radius: 15px; border: 1px dashed var(--line-2); font-size: 12px; line-height: 1; font-weight: 700; white-space: nowrap; color: var(--fg-2); }
+.mk-btn[data-mk="sale"][aria-pressed="true"] > span { background: #ffe14a; border: 1px solid #141312; color: #141312; }
+.mk-btn[data-mk="soldout"][aria-pressed="true"] > span,
+.mk-btn[data-mk="expired"][aria-pressed="true"] > span { background: #2a2826; border: 1px solid #2a2826; color: #ffffff; }
+.reg-thumb .card { position: relative; }
 </style>
 </head>
 <body>
@@ -188,6 +195,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795422620"></script>
+<script src="/admin.js?v=1795427647"></script>
 </body>
 </html>

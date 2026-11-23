@@ -48,6 +48,17 @@
     return stories;
   }
 
+  // the same stickers the site draws, small, on the admin thumbnail
+  function thumbMarks(s) {
+    let h = '';
+    if (s.saleState === 'soldout' || s.saleState === 'expired') {
+      const sold = s.saleState === 'soldout';
+      h += '<div class="mk-over ' + (sold ? 'is-sold' : 'is-exp') + '"><div class="mk-stamp"><b>' + (sold ? 'SOLD OUT' : '기간 만료') + '</b><span>' + (sold ? '품절' : 'EXPIRED') + '</span></div></div>';
+    }
+    if (s.timeSale) h += '<div class="mk-sale"><i class="mk-dot"></i><b>TIME SALE</b></div>';
+    return h;
+  }
+
   function render() {
     $('cntCheck').textContent = stories.filter((s) => !s.hidden && (!s.sure || s.status === 'failed')).length;
     $('cntNolink').textContent = stories.filter((s) => !s.hidden && !s.link && s.status !== 'pending').length;
@@ -68,12 +79,17 @@
       const note = !s.sure || s.status === 'failed' ? (s.reason || '') + (s.altCategory ? ' (' + LABEL[s.altCategory] + '일 수도 있어요)' : '') : '';
       return '<div class="reg-row' + (s.hidden ? ' is-hidden' : '') + (sel.has(s.id) ? ' is-sel' : '') + '" data-id="' + esc(s.id) + '">' +
         (selecting ? '<div class="reg-sel"><label><input type="checkbox" data-sel' + (sel.has(s.id) ? ' checked' : '') + ' aria-label="' + esc((s.itemName || '이름 없음') + ' 선택') + '"></label></div>' : '') +
-        '<div class="reg-thumb"><a class="card" href="' + esc(s.imageUrl) + '" target="_blank" rel="noopener"><img src="' + esc(s.imageUrl) + '" alt="스토리 이미지" loading="lazy"></a></div>' +
+        '<div class="reg-thumb"><a class="card" href="' + esc(s.imageUrl) + '" target="_blank" rel="noopener"><img src="' + esc(s.imageUrl) + '" alt="스토리 이미지" loading="lazy">' + thumbMarks(s) + '</a></div>' +
         '<div class="reg-b"><div class="reg-n"><b>' + esc(s.itemName || '이름 없음') + '</b>' + badge + '</div>' +
         '<span class="reg-m">' + when(s.takenAt) + (s.priceText ? ' · ' + esc(s.priceText) : '') + '</span>' +
         (note ? '<span class="rule">' + esc(note) + '</span>' : '') +
         '<div class="reg-c" role="group" aria-label="카테고리">' +
         CATS.map((c) => '<button type="button" data-cat="' + c[0] + '" aria-pressed="' + (s.category === c[0]) + '"><span>' + c[1] + '</span></button>').join('') +
+        '</div>' +
+        '<div class="reg-mk" role="group" aria-label="사진 위 표시">' +
+        '<button type="button" class="mk-btn" data-mk="sale" aria-pressed="' + Boolean(s.timeSale) + '"><span>타임세일</span></button>' +
+        '<button type="button" class="mk-btn" data-mk="soldout" aria-pressed="' + (s.saleState === 'soldout') + '"><span>품절</span></button>' +
+        '<button type="button" class="mk-btn" data-mk="expired" aria-pressed="' + (s.saleState === 'expired') + '"><span>기간 만료</span></button>' +
         '</div>' +
         '<div class="reg-l"><input type="url" value="' + esc(s.link || '') + '" placeholder="상품링크 붙여넣기" aria-label="상품링크">' +
         '<button type="button" class="pill" data-act="link"><span>저장</span></button></div>' +
@@ -336,6 +352,19 @@
     const s = stories.find((x) => x.id === row.dataset.id);
     if (!s) return;
     try {
+      const mk = e.target.closest('button[data-mk]');
+      if (mk) {
+        // time sale switches on and off; sold out and expired replace each other, a second tap clears
+        let patch;
+        if (mk.dataset.mk === 'sale') patch = { timeSale: !s.timeSale };
+        else patch = { saleState: s.saleState === mk.dataset.mk ? null : mk.dataset.mk };
+        await update(s, patch);
+        render();
+        const names = { sale: '타임세일', soldout: '품절', expired: '기간 만료' };
+        const on = mk.dataset.mk === 'sale' ? s.timeSale : s.saleState === mk.dataset.mk;
+        say(names[mk.dataset.mk] + (on ? ' 표시를 붙였어요' : ' 표시를 뗐어요'));
+        return;
+      }
       const catBtn = e.target.closest('button[data-cat]');
       if (catBtn) {
         const moved = s.category !== catBtn.dataset.cat;
