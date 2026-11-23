@@ -34,6 +34,29 @@
 .health li { display: flex; justify-content: space-between; gap: 12px; }
 .health .ok { color: var(--fg-2); }
 .health .bad { color: #e0566c; font-weight: 700; }
+/* order sheet after the phone's photo picker */
+.pick { position: fixed; top: 0; left: 0; right: 0; height: 100vh; height: 100dvh; z-index: 70; display: flex; flex-direction: column; background: var(--bg); color: var(--fg); }
+.pick-h { flex: none; display: flex; align-items: center; gap: 8px; padding: calc(env(safe-area-inset-top, 0px) + 6px) max(10px, env(safe-area-inset-right, 0px)) 6px max(6px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line); }
+.pick-h b { flex: 1; min-width: 0; text-align: center; font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pick-x { width: 44px; height: 44px; flex: none; display: flex; align-items: center; justify-content: center; }
+.pick-x svg { width: 24px; height: 24px; }
+.pick-go { flex: none; height: 44px; display: flex; align-items: center; }
+.pick-go span { display: flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 18px; background: #ffd23f; color: #1c1a0e; font-size: 15px; font-weight: 700; white-space: nowrap; }
+.pick-go:disabled { opacity: 1; }
+.pick-go:disabled span { background: var(--line-2); color: var(--fg-2); }
+.pick-strip { flex: none; display: flex; gap: 8px; overflow-x: auto; padding: 10px max(12px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line); scrollbar-width: none; }
+.ps { position: relative; flex: none; width: 56px; height: 72px; border-radius: 8px; overflow: hidden; }
+.ps img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ps-n { position: absolute; left: 3px; bottom: 3px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: #ffd23f; color: #1c1a0e; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
+.ps-x { position: absolute; right: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0, 0, 0, 0.6); color: #ffffff; font-size: 14px; line-height: 17px; text-align: center; }
+.pick-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; align-content: start; padding: 2px; }
+.pk { position: relative; aspect-ratio: 3 / 4; overflow: hidden; }
+.pk img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pk::after { content: ""; position: absolute; inset: 0; border: 3px solid transparent; pointer-events: none; }
+.pk.on::after { border-color: #ffd23f; background: rgba(0, 0, 0, 0.18); }
+.pk-n { position: absolute; right: 7px; top: 7px; z-index: 1; width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.95); background: rgba(0, 0, 0, 0.25); color: #1c1a0e; font-size: 14px; font-weight: 700; line-height: 24px; text-align: center; }
+.pk.on .pk-n { border-color: #ffd23f; background: #ffd23f; }
+.pick-f { flex: none; display: flex; align-items: center; gap: 10px; padding: 6px max(12px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 8px) max(12px, env(safe-area-inset-left, 0px)); border-top: 1px solid var(--line); font-size: 12px; color: var(--fg-2); }
 </style>
 </head>
 <body>
@@ -101,7 +124,22 @@
     </div>
   </main>
 </div>
+<div class="pick" id="pick" role="dialog" aria-modal="true" aria-label="올릴 순서 정하기" hidden>
+  <div class="pick-h">
+    <button type="button" class="pick-x" id="pickClose" aria-label="닫기">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"></path><path d="M6 6l12 12"></path></svg>
+    </button>
+    <b>올릴 순서대로 눌러주세요</b>
+    <button type="button" class="pick-go" id="pickGo" disabled><span>올리기</span></button>
+  </div>
+  <div class="pick-strip" id="pickStrip" hidden></div>
+  <div class="pick-grid" id="pickGrid"></div>
+  <div class="pick-f">
+    <button type="button" class="pill" id="pickAll"><span>고른 순서로 모두 선택</span></button>
+    <span>마지막 번호가 사이트 맨 앞에 와요</span>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795414476"></script>
+<script src="/admin.js?v=1795417554"></script>
 </body>
 </html>

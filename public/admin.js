@@ -233,44 +233,96 @@
   });
 
   $('upload').addEventListener('click', () => { $('files').click(); });
-  $('files').addEventListener('change', async () => {
+  // After the phone's picker, the picked photos open in our own sheet. Tapping them numbers them
+  // 1, 2, 3… in the order they should be posted; they upload in that order, the last number newest.
+  let picked = [];
+  let order = [];
+  function closePicker() {
+    picked.forEach((p) => URL.revokeObjectURL(p.url));
+    picked = [];
+    order = [];
+    $('pick').hidden = true;
+    document.documentElement.style.overflow = '';
+    $('files').value = '';
+  }
+  function drawPicker() {
+    $('pickGrid').innerHTML = picked.map((p, i) => {
+      const n = order.indexOf(i);
+      return '<button type="button" class="pk' + (n >= 0 ? ' on' : '') + '" data-i="' + i + '" aria-pressed="' + (n >= 0) + '" aria-label="사진 ' + (i + 1) + (n >= 0 ? ', ' + (n + 1) + '번' : ', 선택 안 됨') + '">' +
+        '<img src="' + p.url + '" alt="">' + '<span class="pk-n">' + (n >= 0 ? n + 1 : '') + '</span></button>';
+    }).join('');
+    $('pickStrip').innerHTML = order.map((i, n) => '<button type="button" class="ps" data-i="' + i + '" aria-label="' + (n + 1) + '번 빼기">' +
+      '<img src="' + picked[i].url + '" alt=""><span class="ps-n">' + (n + 1) + '</span><span class="ps-x" aria-hidden="true">×</span></button>').join('');
+    $('pickStrip').hidden = !order.length;
+    $('pickGo').disabled = !order.length;
+    $('pickGo').querySelector('span').textContent = order.length ? order.length + '장 올리기' : '올리기';
+    $('pickAll').querySelector('span').textContent = order.length === picked.length ? '모두 해제' : '고른 순서로 모두 선택';
+  }
+  function toggle(i) {
+    const n = order.indexOf(i);
+    if (n >= 0) order.splice(n, 1);
+    else order.push(i);
+    drawPicker();
+  }
+  $('files').addEventListener('change', () => {
     const files = Array.from($('files').files || []);
     if (!files.length) return;
+    picked = files.map((f) => ({ file: f, url: URL.createObjectURL(f) }));
+    order = [];
+    drawPicker();
+    $('pick').hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    $('pickGrid').scrollTop = 0;
+  });
+  $('pickGrid').addEventListener('click', (e) => {
+    const b = e.target.closest('.pk');
+    if (b) toggle(Number(b.dataset.i));
+  });
+  $('pickStrip').addEventListener('click', (e) => {
+    const b = e.target.closest('.ps');
+    if (b) toggle(Number(b.dataset.i));
+  });
+  $('pickAll').addEventListener('click', () => {
+    order = order.length === picked.length ? [] : picked.map((p, i) => i);
+    drawPicker();
+  });
+  $('pickClose').addEventListener('click', closePicker);
+  $('pickGo').addEventListener('click', () => {
+    const files = order.map((i) => picked[i].file);
+    closePicker();
+    uploadInOrder(files);
+  });
+
+  async function uploadInOrder(files) {
     const btn = $('upload');
     btn.disabled = true;
     const lines = [];
-    // one by one, so each request stays well under the server's time limit
-    let prevTime = null;
+    // one by one, in number order: the server keeps the order it receives them in
     for (let i = 0; i < files.length; i += 1) {
       $('uploadMsg').textContent = (i + 1) + ' / ' + files.length + ' 올리는 중이에요. 자동 분류까지 몇 초씩 걸려요.';
+      const label = (i + 1) + '번';
       const fd = new FormData();
       fd.append('file', await shrink(files[i]), files[i].name.replace(/\.[^.]+$/, '') + '.jpg');
-      // Photos saved together (e.g. "save all" in KakaoTalk) can share the same second. Then the order
-      // they were picked in breaks the tie, so the later pick counts as the later story.
-      let t = files[i].lastModified || Date.now();
-      if (prevTime !== null && t <= prevTime && prevTime - t < 2000) t = prevTime + 1;
-      prevTime = t;
-      fd.append('takenAt', new Date(t).toISOString());
+      fd.append('takenAt', new Date().toISOString());
       try {
         const body = fd.get('file');
         if (body && body.size > 4.3 * 1024 * 1024) {
-          lines.push(files[i].name + ': 이 브라우저에서 사진을 줄이지 못했어요. 아이폰 Safari에서 올려주세요.');
+          lines.push(label + ': 이 브라우저에서 사진을 줄이지 못했어요. 아이폰 Safari에서 올려주세요.');
           continue;
         }
         const d = await api('/api/ingest', { method: 'POST', body: fd });
         const r = d.results[0];
-        if (r.error) lines.push(files[i].name + ': ' + r.error);
-        else if (r.result === 'duplicate') lines.push(files[i].name + ': 이미 올라와 있어요');
-        else lines.push(files[i].name + ': ' + LABEL[r.category] + (r.sure ? '' : ' (확인 필요)') + (r.itemName ? ' · ' + r.itemName : ''));
+        if (r.error) lines.push(label + ': ' + r.error);
+        else if (r.result === 'duplicate') lines.push(label + ': 이미 올라와 있어요');
+        else lines.push(label + ': ' + LABEL[r.category] + (r.sure ? '' : ' (확인 필요)') + (r.itemName ? ' · ' + r.itemName : ''));
       } catch (err) {
-        lines.push(files[i].name + ': ' + err.message);
+        lines.push(label + ': ' + err.message);
       }
     }
     $('uploadMsg').textContent = lines.join('\n');
-    $('files').value = '';
     btn.disabled = false;
     reload().catch((err) => say(err.message));
-  });
+  }
 
   // Older stories have no saved sticker position: ask a few at a time until none are left.
   $('locate').addEventListener('click', async () => {
