@@ -240,11 +240,17 @@
     btn.disabled = true;
     const lines = [];
     // one by one, so each request stays well under the server's time limit
+    let prevTime = null;
     for (let i = 0; i < files.length; i += 1) {
       $('uploadMsg').textContent = (i + 1) + ' / ' + files.length + ' 올리는 중이에요. 자동 분류까지 몇 초씩 걸려요.';
       const fd = new FormData();
       fd.append('file', await shrink(files[i]), files[i].name.replace(/\.[^.]+$/, '') + '.jpg');
-      fd.append('takenAt', new Date(files[i].lastModified || Date.now()).toISOString());
+      // Photos saved together (e.g. "save all" in KakaoTalk) can share the same second. Then the order
+      // they were picked in breaks the tie, so the later pick counts as the later story.
+      let t = files[i].lastModified || Date.now();
+      if (prevTime !== null && t <= prevTime && prevTime - t < 2000) t = prevTime + 1;
+      prevTime = t;
+      fd.append('takenAt', new Date(t).toISOString());
       try {
         const body = fd.get('file');
         if (body && body.size > 4.3 * 1024 * 1024) {
