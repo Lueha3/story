@@ -13,6 +13,9 @@
   let stories = [];
   let filter = 'check';
   let armedDelete = null;
+  let selecting = false;
+  const sel = new Set();
+  let armedBulk = false;
 
   const toast = $('toast');
   let toastTimer = 0;
@@ -51,6 +54,7 @@
     $('cntAll').textContent = stories.length;
     $('cntHidden').textContent = stories.filter((s) => s.hidden).length;
     document.querySelectorAll('[data-f]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.f === filter)));
+    drawSelBar();
     const rows = visible().slice(0, 200);
     if (!rows.length) {
       $('list').innerHTML = '<p class="empty">여기에 해당하는 스토리가 없어요.</p>';
@@ -62,7 +66,8 @@
       else if (s.status === 'failed') badge = '<span class="badge warn">분류 실패</span>';
       else if (!s.sure) badge = '<span class="badge warn">확인 필요</span>';
       const note = !s.sure || s.status === 'failed' ? (s.reason || '') + (s.altCategory ? ' (' + LABEL[s.altCategory] + '일 수도 있어요)' : '') : '';
-      return '<div class="reg-row' + (s.hidden ? ' is-hidden' : '') + '" data-id="' + esc(s.id) + '">' +
+      return '<div class="reg-row' + (s.hidden ? ' is-hidden' : '') + (sel.has(s.id) ? ' is-sel' : '') + '" data-id="' + esc(s.id) + '">' +
+        (selecting ? '<div class="reg-sel"><label><input type="checkbox" data-sel' + (sel.has(s.id) ? ' checked' : '') + ' aria-label="' + esc((s.itemName || '이름 없음') + ' 선택') + '"></label></div>' : '') +
         '<div class="reg-thumb"><a class="card" href="' + esc(s.imageUrl) + '" target="_blank" rel="noopener"><img src="' + esc(s.imageUrl) + '" alt="스토리 이미지" loading="lazy"></a></div>' +
         '<div class="reg-b"><div class="reg-n"><b>' + esc(s.itemName || '이름 없음') + '</b>' + badge + '</div>' +
         '<span class="reg-m">' + when(s.takenAt) + (s.priceText ? ' · ' + esc(s.priceText) : '') + '</span>' +
@@ -78,6 +83,51 @@
         '</div></div></div>';
     }).join('');
   }
+
+  function drawSelBar() {
+    // only stories in the current tab can stay selected
+    const ids = new Set(visible().map((s) => s.id));
+    sel.forEach((id) => { if (!ids.has(id)) sel.delete(id); });
+    $('selToggle').querySelector('span').textContent = selecting ? '선택 끝' : '선택';
+    $('selTools').hidden = !selecting;
+    $('selAll').querySelector('span').textContent = sel.size && sel.size === ids.size ? '전체 해제' : '전체 선택 (' + ids.size + ')';
+    $('selDelete').disabled = !sel.size;
+    $('selDelete').querySelector('span').textContent = !sel.size ? '선택 삭제' : (armedBulk ? '한 번 더 누르면 ' + sel.size + '개 삭제' : '선택 삭제 (' + sel.size + ')');
+  }
+  $('selToggle').addEventListener('click', () => {
+    selecting = !selecting;
+    sel.clear();
+    armedBulk = false;
+    render();
+  });
+  $('selAll').addEventListener('click', () => {
+    const ids = visible().map((s) => s.id);
+    if (sel.size === ids.length) sel.clear();
+    else ids.forEach((id) => sel.add(id));
+    armedBulk = false;
+    render();
+  });
+  $('selDelete').addEventListener('click', async () => {
+    if (!sel.size) return;
+    if (!armedBulk) { armedBulk = true; drawSelBar(); return; }
+    const ids = Array.from(sel);
+    $('selDelete').disabled = true;
+    try {
+      const d = await api('/api/admin/stories/delete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ids: ids }),
+      });
+      const gone = new Set(d.deleted);
+      stories = stories.filter((s) => !gone.has(s.id));
+      say(d.deleted.length + '개 삭제했어요');
+    } catch (err) {
+      say(err.message);
+    }
+    sel.clear();
+    armedBulk = false;
+    render();
+  });
 
   async function reload() {
     const data = await api('/api/admin/stories');
@@ -148,9 +198,20 @@
     });
   }
 
+  $('list').addEventListener('change', (e) => {
+    const box = e.target.closest('input[data-sel]');
+    if (!box) return;
+    const id = box.closest('.reg-row').dataset.id;
+    if (box.checked) sel.add(id);
+    else sel.delete(id);
+    box.closest('.reg-row').classList.toggle('is-sel', box.checked);
+    armedBulk = false;
+    drawSelBar();
+  });
+
   $('list').addEventListener('click', async (e) => {
     const row = e.target.closest('.reg-row');
-    if (!row) return;
+    if (!row || e.target.closest('.reg-sel')) return;
     const s = stories.find((x) => x.id === row.dataset.id);
     if (!s) return;
     try {
