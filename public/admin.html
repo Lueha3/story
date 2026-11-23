@@ -125,6 +125,15 @@
 .top .tt b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .top .tt span { color: var(--fg-2); font-variant-numeric: tabular-nums; }
 .empty-s { margin: 0; font-size: 13px; color: var(--fg-2); }
+.spark.hours { height: 80px; gap: 2px; }
+.spark.hours i.peak { background: var(--accent); opacity: 1; }
+.ctab { display: flex; flex-direction: column; }
+.crow { display: grid; grid-template-columns: 72px 1fr 1fr 1fr; gap: 8px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; font-variant-numeric: tabular-nums; }
+.crow:last-child { border-bottom: 0; }
+.crow.h { font-size: 11px; color: var(--fg-2); padding-top: 0; }
+.crow span:not(:first-child) { text-align: right; }
+.crow b { font-weight: 700; }
+.reg-stat { font-size: 12px; color: var(--fg-3); font-variant-numeric: tabular-nums; }
 </style>
 </head>
 <body>
@@ -161,6 +170,21 @@
             <h2>최근 30일 방문자</h2>
             <div class="spark" id="spark" role="img" aria-label="최근 30일 방문자 막대그래프"></div>
             <div class="spark-x" id="sparkX"></div>
+          </div>
+          <div class="box">
+            <h2>시간대별 방문 <small>30일</small></h2>
+            <div class="spark hours" id="hours" role="img" aria-label="시간대별 방문자 막대그래프"></div>
+            <div class="spark-x"><span>0시</span><span>6시</span><span>12시</span><span>18시</span><span>23시</span></div>
+            <p class="hint" id="peak"></p>
+          </div>
+          <div class="box">
+            <h2>카테고리별 <small>30일</small></h2>
+            <div class="ctab" id="cats"></div>
+          </div>
+          <div class="box">
+            <h2>타임세일 효과 <small>30일</small></h2>
+            <div class="ctab" id="sale"></div>
+            <p class="hint">지금 타임세일 표시가 붙어 있는 스토리와 아닌 스토리의 클릭률을 비교해요.</p>
           </div>
           <div class="two">
             <div class="box"><h2>어디서 왔나요 <small>30일</small></h2><div class="bars" id="sources"></div></div>
@@ -264,6 +288,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795433903"></script>
+<script src="/admin.js?v=1795434050"></script>
 </body>
 </html>

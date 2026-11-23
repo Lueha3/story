@@ -154,6 +154,10 @@ function localStats(events: VisitEvent[], today: string): Stats {
     if (e.type === "click") t.clicks += 1;
     per.set(e.storyId as string, t);
   });
+  const hourSets = Array.from({ length: 24 }, () => new Set<string>());
+  events.filter((e) => e.day >= since(30)).forEach((e) => {
+    hourSets[new Date(Date.parse(e.ts) + 9 * 3600 * 1000).getUTCHours()].add(e.day + e.visitor);
+  });
   const now = Date.now() - 5 * 60 * 1000;
   return {
     now: new Set(events.filter((e) => Date.parse(e.ts) >= now).map((e) => e.visitor)).size,
@@ -167,5 +171,7 @@ function localStats(events: VisitEvent[], today: string): Stats {
       .sort((a, b) => b.clicks - a.clicks || b.views - a.views)
       .slice(0, 10),
     days: Array.from({ length: 30 }, (_, i) => dayBefore(today, 29 - i)).map((d) => ({ day: d, visitors: m30.get(d)?.size ?? 0 })),
+    hours: hourSets.map((s) => s.size),
+    perStory: Array.from(per, ([storyId, v]) => ({ storyId, ...v })),
   };
 }

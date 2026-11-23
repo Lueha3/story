@@ -99,6 +99,7 @@
         '<div class="reg-thumb"><a class="card" href="' + esc(s.imageUrl) + '" target="_blank" rel="noopener"><img src="' + esc(s.imageUrl) + '" alt="스토리 이미지" loading="lazy">' + thumbMarks(s) + '</a></div>' +
         '<div class="reg-b"><div class="reg-n"><b>' + esc(s.itemName || '이름 없음') + '</b>' + badge + '</div>' +
         '<span class="reg-m">' + when(s.takenAt) + (s.priceText ? ' · ' + esc(s.priceText) : '') + '</span>' +
+        (lastPer ? '<span class="reg-stat">30일 조회 ' + ((lastPer[s.id] || {}).views || 0) + ' · 클릭 ' + ((lastPer[s.id] || {}).clicks || 0) + '</span>' : '') +
         (note ? '<span class="rule">' + esc(note) + '</span>' : '') +
         '<div class="reg-c" role="group" aria-label="카테고리">' +
         CATS.map((c) => '<button type="button" data-cat="' + c[0] + '" aria-pressed="' + (s.category === c[0]) + '"><span>' + c[1] + '</span></button>').join('') +
@@ -201,7 +202,7 @@
     try { localStorage.setItem(KEY, token); } catch (e) { /* storage blocked */ }
     $('loginBox').hidden = true;
     $('work').hidden = false;
-    reload().catch((e) => { $('list').innerHTML = '<p class="empty">' + esc(e.message) + '</p>'; });
+    reload().then(() => loadStats()).catch((e) => { $('list').innerHTML = '<p class="empty">' + esc(e.message) + '</p>'; });
   }
 
   $('showToken').addEventListener('click', () => {
@@ -696,6 +697,7 @@
   const SRC = { instagram: '인스타그램', kakao: '카카오톡', direct: '직접 입력', other: '기타' };
   const DEV = { ios: '아이폰', android: '안드로이드', pc: 'PC' };
   let view = 'stories';
+  let lastPer = null;
   let statsTimer = 0;
   function setView(v) {
     view = v;
@@ -746,6 +748,23 @@
         return '<li><span class="tn">' + (i + 1) + '</span>' + (s ? '<img src="' + esc(s.imageUrl) + '" alt="" loading="lazy">' : '<img alt="">') +
           '<span class="tt"><b>' + esc(s ? (s.itemName || '이름 없음') : '지운 스토리') + '</b><span>클릭 ' + fmt(x.clicks) + ' · 조회 ' + fmt(x.views) + ' · 클릭률 ' + rate(x.clicks, x.views) + '</span></span></li>';
       }).join('') : '<p class="empty-s">아직 기록이 없어요.</p>';
+      // hours of the day
+      const hmax = Math.max(1, ...d.hours);
+      const peakH = d.hours.indexOf(Math.max(...d.hours));
+      $('hours').innerHTML = d.hours.map((v, h) => '<i' + (v && h === peakH ? ' class="peak"' : '') + ' style="height:' + Math.max(2, Math.round((v / hmax) * 100)) + '%" title="' + h + '시 · ' + v + '명"></i>').join('');
+      $('peak').textContent = Math.max(...d.hours) ? '가장 많이 오는 시간은 ' + peakH + '시~' + (peakH + 1) + '시예요.' : '아직 기록이 없어요.';
+      // categories and the time sale comparison, from every story's views and taps
+      const per = {};
+      d.perStory.forEach((x) => { per[x.storyId] = x; });
+      lastPer = per;
+      const head = '<div class="crow h"><span></span><span>조회</span><span>클릭</span><span>클릭률</span></div>';
+      const row = (name, v, c) => '<div class="crow"><b>' + name + '</b><span>' + fmt(v) + '</span><span>' + fmt(c) + '</span><span>' + rate(c, v) + '</span></div>';
+      const sumOf = (list) => list.reduce((a, s) => { const x = per[s.id]; if (x) { a.v += x.views; a.c += x.clicks; } return a; }, { v: 0, c: 0 });
+      $('cats').innerHTML = head + CATS.map((c) => { const t = sumOf(stories.filter((s) => s.category === c[0])); return row(c[1], t.v, t.c); }).join('');
+      const on = sumOf(stories.filter((s) => s.timeSale));
+      const off = sumOf(stories.filter((s) => !s.timeSale));
+      $('sale').innerHTML = head + row('타임세일', on.v, on.c) + row('일반', off.v, off.c);
+      if (view === 'stories') render();
       $('statsMsg').textContent = '';
     } catch (err) {
       $('statsMsg').textContent = err.message;

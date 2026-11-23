@@ -216,7 +216,7 @@ export function createVercelStore(databaseUrl: string): Store {
       const d7 = dayBefore(today, 6);
       const d30 = dayBefore(today, 29);
       const n = (v: unknown) => Number(v ?? 0);
-      const [nowRows, dayRows, sumRows, srcRows, devRows, topRows, dailyRows] = await Promise.all([
+      const [nowRows, dayRows, sumRows, srcRows, devRows, topRows, dailyRows, hourRows, storyRows] = await Promise.all([
         sql`SELECT count(DISTINCT visitor) AS n FROM events WHERE ts > now() - interval '5 minutes'`,
         sql`SELECT day, count(DISTINCT visitor) AS visitors,
               count(*) FILTER (WHERE type = 'visit') AS visits,
@@ -231,7 +231,16 @@ export function createVercelStore(databaseUrl: string): Store {
             FROM events WHERE story_id IS NOT NULL AND day >= ${d30} GROUP BY story_id
             ORDER BY clicks DESC, views DESC LIMIT 10`,
         sql`SELECT day, count(DISTINCT visitor) AS visitors FROM events WHERE day >= ${d30} GROUP BY day`,
+        sql`SELECT extract(hour FROM ts AT TIME ZONE 'Asia/Seoul')::int AS h, count(DISTINCT day || visitor) AS visitors
+            FROM events WHERE day >= ${d30} GROUP BY 1`,
+        sql`SELECT story_id, count(*) FILTER (WHERE type = 'view') AS views, count(*) FILTER (WHERE type = 'click') AS clicks
+            FROM events WHERE story_id IS NOT NULL AND day >= ${d30} GROUP BY story_id`,
       ]);
+      const hours = Array.from({ length: 24 }, () => 0);
+      (hourRows as Row[]).forEach((r) => {
+        const h = n(r.h);
+        if (h >= 0 && h < 24) hours[h] = n(r.visitors);
+      });
       const pick = (day: string) => {
         const r = (dayRows as Row[]).find((x) => x.day === day);
         return { visitors: n(r?.visitors), visits: n(r?.visits), views: n(r?.views), clicks: n(r?.clicks) };
@@ -247,6 +256,8 @@ export function createVercelStore(databaseUrl: string): Store {
         devices: (devRows as Row[]).map((r) => ({ key: String(r.key), visitors: n(r.visitors) })),
         top: (topRows as Row[]).map((r) => ({ storyId: String(r.story_id), views: n(r.views), clicks: n(r.clicks) })),
         days: Array.from({ length: 30 }, (_, i) => dayBefore(today, 29 - i)).map((d) => ({ day: d, visitors: daily.get(d) ?? 0 })),
+        hours,
+        perStory: (storyRows as Row[]).map((r) => ({ storyId: String(r.story_id), views: n(r.views), clicks: n(r.clicks) })),
       };
       return out;
     },

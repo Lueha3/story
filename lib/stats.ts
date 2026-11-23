@@ -31,7 +31,13 @@ export interface Stats {
   devices: { key: string; visitors: number }[];
   top: { storyId: string; views: number; clicks: number }[];
   days: { day: string; visitors: number }[];
+  /** visitors by Korea-time hour of day (0-23), last 30 days */
+  hours: number[];
+  /** views and taps for every story seen in the last 30 days */
+  perStory: { storyId: string; views: number; clicks: number }[];
 }
+
+export const kstHour = (t: number) => new Date(t + KST).getUTCHours();
 
 const KST = 9 * 3600 * 1000;
 export const kstDay = (t: number) => new Date(t + KST).toISOString().slice(0, 10);
