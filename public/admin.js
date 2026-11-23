@@ -245,15 +245,33 @@
     document.documentElement.style.overflow = '';
     $('files').value = '';
   }
+  // Tiles are built once per pick and then only re-marked: rebuilding them under a moving finger
+  // would detach the touched element and end the drag.
   function drawPicker() {
+    const tiles = $('pickGrid').children;
+    if (tiles.length === picked.length) {
+      for (let i = 0; i < tiles.length; i += 1) {
+        const n = order.indexOf(i);
+        tiles[i].classList.toggle('on', n >= 0);
+        tiles[i].setAttribute('aria-pressed', String(n >= 0));
+        tiles[i].setAttribute('aria-label', '사진 ' + (i + 1) + (n >= 0 ? ', ' + (n + 1) + '번' : ', 선택 안 됨'));
+        tiles[i].lastChild.textContent = n >= 0 ? String(n + 1) : '';
+      }
+      drawStrip();
+      return;
+    }
     $('pickGrid').innerHTML = picked.map((p, i) => {
       const n = order.indexOf(i);
       return '<button type="button" class="pk' + (n >= 0 ? ' on' : '') + '" data-i="' + i + '" aria-pressed="' + (n >= 0) + '" aria-label="사진 ' + (i + 1) + (n >= 0 ? ', ' + (n + 1) + '번' : ', 선택 안 됨') + '">' +
         '<img src="' + p.url + '" alt="">' + '<span class="pk-n">' + (n >= 0 ? n + 1 : '') + '</span></button>';
     }).join('');
+    drawStrip();
+  }
+  function drawStrip() {
     $('pickStrip').innerHTML = order.map((i, n) => '<button type="button" class="ps" data-i="' + i + '" aria-label="' + (n + 1) + '번 빼기">' +
       '<img src="' + picked[i].url + '" alt=""><span class="ps-n">' + (n + 1) + '</span><span class="ps-x" aria-hidden="true">×</span></button>').join('');
-    $('pickStrip').hidden = !order.length;
+    // the strip keeps its height when empty, so the photos never jump under a moving finger
+    if (!order.length) $('pickStrip').innerHTML = '<span class="ps-empty">누른 순서대로 여기에 쌓여요</span>';
     $('pickGo').disabled = !order.length;
     $('pickGo').querySelector('span').textContent = order.length ? order.length + '장 올리기' : '올리기';
     $('pickAll').querySelector('span').textContent = order.length === picked.length ? '모두 해제' : '고른 순서로 모두 선택';
@@ -269,15 +287,93 @@
     if (!files.length) return;
     picked = files.map((f) => ({ file: f, url: URL.createObjectURL(f) }));
     order = [];
+    $('pickGrid').innerHTML = '';
     drawPicker();
     $('pick').hidden = false;
     document.documentElement.style.overflow = 'hidden';
     $('pickGrid').scrollTop = 0;
   });
   $('pickGrid').addEventListener('click', (e) => {
+    if (dragJustEnded) { dragJustEnded = false; return; }
     const b = e.target.closest('.pk');
     if (b) toggle(Number(b.dataset.i));
   });
+
+  // Drag across photos to number many at once, like the Photos app: start the drag sideways,
+  // then move in any direction. Starting on an empty photo numbers what you pass over (in the order
+  // you pass it); starting on a numbered one takes the numbers off. A straight up-down swipe still scrolls.
+  const grid = $('pickGrid');
+  let drag = null;
+  let dragJustEnded = false;
+  let autoTimer = 0;
+  function tileAt(x, y) {
+    const el = document.elementFromPoint(x, y);
+    const b = el && el.closest ? el.closest('.pk') : null;
+    return b && grid.contains(b) ? Number(b.dataset.i) : null;
+  }
+  function paint(i) {
+    if (i === null || drag.seen.has(i)) return;
+    drag.seen.add(i);
+    const n = order.indexOf(i);
+    if (drag.adding && n < 0) order.push(i);
+    if (!drag.adding && n >= 0) order.splice(n, 1);
+    drawPicker();
+  }
+  // near the top or bottom edge the grid keeps scrolling so a long run can be selected in one drag
+  function autoScroll() {
+    if (!drag || !drag.active) return;
+    const r = grid.getBoundingClientRect();
+    const edge = 60;
+    let dy = 0;
+    if (drag.y < r.top + edge) dy = -Math.ceil((r.top + edge - drag.y) / 4);
+    else if (drag.y > r.bottom - edge) dy = Math.ceil((drag.y - (r.bottom - edge)) / 4);
+    if (dy) {
+      grid.scrollTop += dy;
+      paint(tileAt(drag.x, drag.y));
+    }
+    autoTimer = requestAnimationFrame(autoScroll);
+  }
+  function dragStart(x, y) {
+    const i = tileAt(x, y);
+    drag = i === null ? null : { x0: x, y0: y, x: x, y: y, first: i, active: false, adding: order.indexOf(i) < 0, seen: new Set() };
+  }
+  // returns true once the gesture has become a selection drag
+  function dragMove(x, y) {
+    if (!drag) return false;
+    drag.x = x;
+    drag.y = y;
+    if (!drag.active) {
+      const dx = Math.abs(x - drag.x0);
+      const dy = Math.abs(y - drag.y0);
+      if (dx < 10 && dy < 10) return false;
+      if (dy >= dx) { drag = null; return false; }
+      drag.active = true;
+      paint(drag.first);
+      autoTimer = requestAnimationFrame(autoScroll);
+    }
+    paint(tileAt(x, y));
+    return true;
+  }
+  function dragEnd() {
+    if (drag && drag.active) dragJustEnded = true;
+    cancelAnimationFrame(autoTimer);
+    drag = null;
+    setTimeout(() => { dragJustEnded = false; }, 350);
+  }
+  grid.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) { drag = null; return; }
+    dragStart(e.touches[0].clientX, e.touches[0].clientY);
+  }, { passive: true });
+  grid.addEventListener('touchmove', (e) => {
+    if (!drag) return;
+    if (dragMove(e.touches[0].clientX, e.touches[0].clientY)) e.preventDefault();
+  }, { passive: false });
+  grid.addEventListener('touchend', dragEnd);
+  grid.addEventListener('touchcancel', dragEnd);
+  // mouse, for a computer
+  grid.addEventListener('mousedown', (e) => { if (e.button === 0) { dragStart(e.clientX, e.clientY); e.preventDefault(); } });
+  window.addEventListener('mousemove', (e) => { if (drag) dragMove(e.clientX, e.clientY); });
+  window.addEventListener('mouseup', () => { if (drag) dragEnd(); });
   $('pickStrip').addEventListener('click', (e) => {
     const b = e.target.closest('.ps');
     if (b) toggle(Number(b.dataset.i));

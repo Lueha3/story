@@ -45,13 +45,15 @@
 .pick-go:disabled { opacity: 1; }
 .pick-go:disabled span { background: var(--line-2); color: var(--fg-2); }
 .pick-strip { flex: none; display: flex; gap: 8px; overflow-x: auto; padding: 10px max(12px, env(safe-area-inset-left, 0px)); border-bottom: 1px solid var(--line); scrollbar-width: none; }
+.pick-strip { min-height: 72px; align-items: center; }
+.ps-empty { font-size: 13px; color: var(--fg-2); }
 .ps { position: relative; flex: none; width: 56px; height: 72px; border-radius: 8px; overflow: hidden; }
 .ps img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ps-n { position: absolute; left: 3px; bottom: 3px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: #ffd23f; color: #1c1a0e; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
 .ps-x { position: absolute; right: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0, 0, 0, 0.6); color: #ffffff; font-size: 14px; line-height: 17px; text-align: center; }
 .pick-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; align-content: start; grid-auto-rows: max-content; padding: 2px; }
 /* iPhone Safari ignores aspect-ratio on buttons, so the tile height comes from padding instead */
-.pk { position: relative; display: block; width: 100%; height: 0; padding: 0 0 133.33%; overflow: hidden; background: var(--raise); }
+.pk { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; position: relative; display: block; width: 100%; height: 0; padding: 0 0 133.33%; overflow: hidden; background: var(--raise); }
 .pk img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .pk::after { content: ""; position: absolute; inset: 0; border: 3px solid transparent; pointer-events: none; }
 .pk.on::after { border-color: #ffd23f; background: rgba(0, 0, 0, 0.18); }
@@ -133,14 +135,14 @@
     <b>올릴 순서대로 눌러주세요</b>
     <button type="button" class="pick-go" id="pickGo" disabled><span>올리기</span></button>
   </div>
-  <div class="pick-strip" id="pickStrip" hidden></div>
+  <div class="pick-strip" id="pickStrip"></div>
   <div class="pick-grid" id="pickGrid"></div>
   <div class="pick-f">
     <button type="button" class="pill" id="pickAll"><span>고른 순서로 모두 선택</span></button>
-    <span>마지막 번호가 사이트 맨 앞에 와요</span>
+    <span>옆으로 밀면 여러 장 선택<br>마지막 번호가 사이트 맨 앞</span>
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795417554"></script>
+<script src="/admin.js?v=1795418728"></script>
 </body>
 </html>
