@@ -153,7 +153,37 @@
     renderFeed();
   });
 
+  // On a computer the category bar scrolls sideways by dragging with the mouse (a phone already
+  // swipes it), and the mouse wheel scrolls it sideways too. A drag does not count as a click.
+  let barDrag = null;
+  let barDragged = false;
+  tabsList.addEventListener('mousedown', (e) => {
+    if (e.button !== 0) return;
+    barDrag = { x: e.clientX, left: tabsList.scrollLeft, moved: false };
+    e.preventDefault();
+  });
+  window.addEventListener('mousemove', (e) => {
+    if (!barDrag) return;
+    const dx = e.clientX - barDrag.x;
+    if (!barDrag.moved && Math.abs(dx) > 4) { barDrag.moved = true; tabsList.classList.add('is-dragging'); }
+    if (barDrag.moved) tabsList.scrollLeft = barDrag.left - dx;
+  });
+  window.addEventListener('mouseup', () => {
+    if (!barDrag) return;
+    barDragged = barDrag.moved;
+    barDrag = null;
+    tabsList.classList.remove('is-dragging');
+    setTimeout(() => { barDragged = false; }, 0);
+  });
+  tabsList.addEventListener('wheel', (e) => {
+    if (Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+    if (tabsList.scrollWidth <= tabsList.clientWidth) return;
+    tabsList.scrollLeft += e.deltaY;
+    e.preventDefault();
+  }, { passive: false });
+
   tabsList.addEventListener('click', (e) => {
+    if (barDragged) { e.preventDefault(); e.stopPropagation(); return; }
     const chip = e.target.closest('.chip');
     if (chip) setTab(chip.dataset.tab);
   });

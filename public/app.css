@@ -1142,3 +1142,14 @@ body {
   width: 16px;
   height: 16px;
 }
+
+/* the category bar can be dragged sideways with a mouse */
+@media (hover: hover) and (pointer: fine) {
+  .tabs-list {
+    cursor: grab;
+  }
+  .tabs-list.is-dragging,
+  .tabs-list.is-dragging .chip {
+    cursor: grabbing;
+  }
+}
