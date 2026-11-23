@@ -49,9 +49,10 @@
 .ps img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ps-n { position: absolute; left: 3px; bottom: 3px; min-width: 18px; height: 18px; padding: 0 4px; box-sizing: border-box; border-radius: 9px; background: #ffd23f; color: #1c1a0e; font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
 .ps-x { position: absolute; right: 3px; top: 3px; width: 18px; height: 18px; border-radius: 50%; background: rgba(0, 0, 0, 0.6); color: #ffffff; font-size: 14px; line-height: 17px; text-align: center; }
-.pick-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; align-content: start; padding: 2px; }
-.pk { position: relative; aspect-ratio: 3 / 4; overflow: hidden; }
-.pk img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pick-grid { flex: 1; min-height: 0; overflow-y: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 2px; align-content: start; grid-auto-rows: max-content; padding: 2px; }
+/* iPhone Safari ignores aspect-ratio on buttons, so the tile height comes from padding instead */
+.pk { position: relative; display: block; width: 100%; height: 0; padding: 0 0 133.33%; overflow: hidden; background: var(--raise); }
+.pk img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
 .pk::after { content: ""; position: absolute; inset: 0; border: 3px solid transparent; pointer-events: none; }
 .pk.on::after { border-color: #ffd23f; background: rgba(0, 0, 0, 0.18); }
 .pk-n { position: absolute; right: 7px; top: 7px; z-index: 1; width: 28px; height: 28px; box-sizing: border-box; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.95); background: rgba(0, 0, 0, 0.25); color: #1c1a0e; font-size: 14px; font-weight: 700; line-height: 24px; text-align: center; }
