@@ -188,6 +188,71 @@
 
   document.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => { filter = b.dataset.f; render(); }));
 
+  // ---- many links at once ----
+  // Reads every link from pasted text in order, each with the line of text above it as a hint,
+  // and pairs them with the stories in the list as shown (top to bottom).
+  let bulkPairs = [];
+  let bulkFlipped = false;
+  function readLinks(text) {
+    const out = [];
+    let hint = '';
+    text.split(/\r?\n/).forEach((line) => {
+      const urls = line.match(/https?:\/\/[^\s<>"']+/g);
+      if (!urls) {
+        const t = line.trim().replace(/^[—–-]+$/, '');
+        if (t) hint = t;
+        return;
+      }
+      const before = line.slice(0, line.indexOf(urls[0])).trim();
+      urls.forEach((u) => { out.push({ url: u, hint: before || hint }); });
+      hint = '';
+    });
+    return out;
+  }
+  function drawBulk() {
+    const links = readLinks($('bulkText').value);
+    if (bulkFlipped) links.reverse();
+    const targets = visible();
+    const n = Math.min(links.length, targets.length);
+    bulkPairs = [];
+    for (let i = 0; i < n; i += 1) bulkPairs.push({ story: targets[i], link: links[i] });
+    let msg = '링크 ' + links.length + '개, 목록의 스토리 ' + targets.length + '개' + (bulkFlipped ? ' · 링크 순서를 뒤집었어요' : '') + '.';
+    if (links.length !== targets.length) msg += ' 개수가 달라요. 앞에서부터 ' + n + '개만 짝지어요.';
+    msg += ' 사진과 링크 위 설명이 맞는지 확인하고 넣어주세요.';
+    $('bulkMsg').textContent = links.length ? msg : '글에서 링크를 찾지 못했어요.';
+    $('bulkList').innerHTML = bulkPairs.map((p, i) => '<li><span class="bn">' + (i + 1) + '</span>' +
+      '<img src="' + esc(p.story.imageUrl) + '" alt="" loading="lazy">' +
+      '<span class="bt"><b>' + esc(p.story.itemName || '이름 없음') + '</b>' +
+      '<span>' + (p.link.hint ? esc(p.link.hint) : '<em class="none">설명 없음</em>') + '</span>' +
+      '<small>' + esc(p.link.url) + (p.story.link ? ' · 지금 링크를 바꿔요' : '') + '</small></span></li>').join('');
+    $('bulkList').hidden = !bulkPairs.length;
+    $('bulkFlip').hidden = !links.length;
+    $('bulkApply').hidden = !bulkPairs.length;
+    $('bulkApply').querySelector('span').textContent = bulkPairs.length + '개 이대로 넣기';
+  }
+  $('bulkCheck').addEventListener('click', () => { bulkFlipped = false; drawBulk(); });
+  $('bulkFlip').addEventListener('click', () => { bulkFlipped = !bulkFlipped; drawBulk(); });
+  $('bulkApply').addEventListener('click', async () => {
+    if (!bulkPairs.length) return;
+    $('bulkApply').disabled = true;
+    try {
+      const d = await api('/api/admin/stories/links', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pairs: bulkPairs.map((p) => ({ id: p.story.id, link: p.link.url })) }),
+      });
+      $('bulkMsg').textContent = d.saved + '개 스토리에 링크를 넣었어요.';
+      $('bulkList').hidden = true;
+      $('bulkApply').hidden = true;
+      $('bulkFlip').hidden = true;
+      bulkPairs = [];
+      await reload();
+    } catch (err) {
+      $('bulkMsg').textContent = err.message;
+    }
+    $('bulkApply').disabled = false;
+  });
+
   function update(s, patch) {
     return api('/api/admin/stories/' + encodeURIComponent(s.id), {
       method: 'PATCH',

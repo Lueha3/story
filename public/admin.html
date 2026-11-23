@@ -66,6 +66,17 @@
 .reg-sel input { width: 24px; height: 24px; margin: 10px 0; accent-color: #e0566c; }
 .reg-sel label { display: flex; min-width: 44px; min-height: 44px; justify-content: center; cursor: pointer; }
 .reg-row.is-sel { background: rgba(224, 86, 108, 0.08); }
+.bulk-l { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+.adm textarea { width: 100%; box-sizing: border-box; min-height: 120px; padding: 10px 12px; border: 1px solid var(--line-2); border-radius: 10px; background: var(--bg); color: var(--fg); font: inherit; font-size: 14px; line-height: 1.5; resize: vertical; }
+.bulk { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; max-height: 520px; overflow-y: auto; border-top: 1px solid var(--line); }
+.bulk li { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+.bulk .bn { flex: none; width: 26px; font-size: 12px; color: var(--fg-2); text-align: right; }
+.bulk img { flex: none; width: 40px; height: 56px; object-fit: cover; border-radius: 4px; background: var(--raise); }
+.bulk .bt { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; font-size: 13px; line-height: 1.35; }
+.bulk .bt b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bulk .bt span { color: var(--fg-2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bulk .bt small { color: var(--fg-3); font-size: 11px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bulk .bt .none { color: #e0566c; }
 </style>
 </head>
 <body>
@@ -120,6 +131,20 @@
           <p class="msg" id="linkMsg"></p>
         </section>
 
+        <section class="box">
+          <h2>링크 한꺼번에 넣기</h2>
+          <p class="hint">링크가 든 글을 그대로 붙여넣으세요. 글에 나온 순서대로, 아래 목록(지금 고른 탭)의 위에서부터 한 개씩 짝지어요. 넣기 전에 짝을 확인할 수 있어요.</p>
+          <label class="bulk-l" for="bulkText">링크 글</label>
+          <textarea id="bulkText" rows="6" placeholder="https://..."></textarea>
+          <div class="row">
+            <button type="button" class="pill" id="bulkCheck"><span>짝 확인하기</span></button>
+            <button type="button" class="pill" id="bulkFlip" hidden><span>순서 뒤집기</span></button>
+            <button type="button" class="pill solid" id="bulkApply" hidden><span>이대로 넣기</span></button>
+          </div>
+          <p class="msg" id="bulkMsg"></p>
+          <ol class="bulk" id="bulkList" hidden></ol>
+        </section>
+
         <section>
           <div class="row" role="group" aria-label="보기">
             <button type="button" class="pill chip" data-f="check" aria-pressed="true"><span>확인 필요<small id="cntCheck">0</small></span></button>
@@ -156,6 +181,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795420299"></script>
+<script src="/admin.js?v=1795421699"></script>
 </body>
 </html>
