@@ -209,27 +209,82 @@
     });
     return out;
   }
+  // pairs: [{ story, link: { url, hint }, include, sure, why }]
+  function renderBulk(msg) {
+    $('bulkMsg').textContent = msg;
+    $('bulkList').innerHTML = bulkPairs.map((p, i) => {
+      const st = p.story;
+      return '<li class="' + (p.sure ? '' : 'unsure') + '" data-i="' + i + '">' +
+        '<label class="bc"><input type="checkbox" data-inc' + (p.include ? ' checked' : '') + (st ? '' : ' disabled') + ' aria-label="' + (i + 1) + '번 넣기"></label>' +
+        '<span class="bn">' + (i + 1) + '</span>' +
+        (st ? '<img src="' + esc(st.imageUrl) + '" alt="" loading="lazy">' : '<span class="noimg">짝 없음</span>') +
+        '<span class="bt"><b>' + (st ? esc(st.itemName || '이름 없음') : '맞는 스토리를 못 찾았어요') + (p.sure ? '' : ' <em class="flag">확인 필요</em>') + '</b>' +
+        '<span>' + (p.link.hint ? esc(p.link.hint) : '<em class="none">설명 없음</em>') + '</span>' +
+        (p.why ? '<span class="why">AI: ' + esc(p.why) + '</span>' : '') +
+        '<small>' + esc(p.link.url) + (st && st.link ? ' · 지금 링크를 바꿔요' : '') + '</small></span></li>';
+    }).join('');
+    $('bulkList').hidden = !bulkPairs.length;
+    drawApply();
+  }
+  function drawApply() {
+    const n = bulkPairs.filter((p) => p.include && p.story).length;
+    $('bulkApply').hidden = !bulkPairs.length;
+    $('bulkApply').disabled = !n;
+    $('bulkApply').querySelector('span').textContent = n + '개 넣기';
+  }
+  $('bulkList').addEventListener('change', (e) => {
+    const box = e.target.closest('input[data-inc]');
+    if (!box) return;
+    bulkPairs[Number(box.closest('li').dataset.i)].include = box.checked;
+    drawApply();
+  });
+
+  // in order: the nth link goes to the nth story in the list
   function drawBulk() {
     const links = readLinks($('bulkText').value);
     if (bulkFlipped) links.reverse();
     const targets = visible();
     const n = Math.min(links.length, targets.length);
     bulkPairs = [];
-    for (let i = 0; i < n; i += 1) bulkPairs.push({ story: targets[i], link: links[i] });
-    let msg = '링크 ' + links.length + '개, 목록의 스토리 ' + targets.length + '개' + (bulkFlipped ? ' · 링크 순서를 뒤집었어요' : '') + '.';
+    for (let i = 0; i < n; i += 1) bulkPairs.push({ story: targets[i], link: links[i], include: true, sure: true, why: '' });
+    let msg = '순서대로 짝지었어요. 링크 ' + links.length + '개, 목록의 스토리 ' + targets.length + '개' + (bulkFlipped ? ' · 링크 순서를 뒤집었어요' : '') + '.';
     if (links.length !== targets.length) msg += ' 개수가 달라요. 앞에서부터 ' + n + '개만 짝지어요.';
-    msg += ' 사진과 링크 위 설명이 맞는지 확인하고 넣어주세요.';
-    $('bulkMsg').textContent = links.length ? msg : '글에서 링크를 찾지 못했어요.';
-    $('bulkList').innerHTML = bulkPairs.map((p, i) => '<li><span class="bn">' + (i + 1) + '</span>' +
-      '<img src="' + esc(p.story.imageUrl) + '" alt="" loading="lazy">' +
-      '<span class="bt"><b>' + esc(p.story.itemName || '이름 없음') + '</b>' +
-      '<span>' + (p.link.hint ? esc(p.link.hint) : '<em class="none">설명 없음</em>') + '</span>' +
-      '<small>' + esc(p.link.url) + (p.story.link ? ' · 지금 링크를 바꿔요' : '') + '</small></span></li>').join('');
-    $('bulkList').hidden = !bulkPairs.length;
     $('bulkFlip').hidden = !links.length;
-    $('bulkApply').hidden = !bulkPairs.length;
-    $('bulkApply').querySelector('span').textContent = bulkPairs.length + '개 이대로 넣기';
+    renderBulk(links.length ? msg : '글에서 링크를 찾지 못했어요.');
   }
+
+  // by the AI: it reads each story picture and the line above each link
+  async function aiMatch() {
+    const links = readLinks($('bulkText').value);
+    if (!links.length) { renderBulk('글에서 링크를 찾지 못했어요.'); return; }
+    const targets = visible();
+    if (!targets.length) { renderBulk('짝지을 스토리가 목록에 없어요.'); return; }
+    $('bulkAi').disabled = true;
+    $('bulkFlip').hidden = true;
+    bulkPairs = [];
+    renderBulk('AI가 스토리 ' + targets.length + '개와 링크 ' + links.length + '개를 비교하는 중이에요. 1~2분 걸릴 수 있어요.');
+    try {
+      const d = await api('/api/admin/match', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ links: links, storyIds: targets.map((s) => s.id) }),
+      });
+      const byId = {};
+      targets.forEach((s) => { byId[s.id] = s; });
+      bulkPairs = d.matches.map((m) => {
+        const story = m.storyId ? byId[m.storyId] || null : null;
+        return { story: story, link: links[m.link], include: Boolean(story) && m.sure, sure: Boolean(story) && m.sure, why: m.why };
+      });
+      const sure = bulkPairs.filter((p) => p.sure).length;
+      const unsure = bulkPairs.filter((p) => p.story && !p.sure).length;
+      const none = bulkPairs.filter((p) => !p.story).length;
+      renderBulk('AI가 짝을 찾았어요. 확실 ' + sure + '개' + (unsure ? ', 확인 필요 ' + unsure + '개(체크해야 들어가요)' : '') + (none ? ', 짝 없음 ' + none + '개' : '') + '.');
+    } catch (err) {
+      renderBulk(err.message);
+    }
+    $('bulkAi').disabled = false;
+  }
+  $('bulkAi').addEventListener('click', aiMatch);
   $('bulkCheck').addEventListener('click', () => { bulkFlipped = false; drawBulk(); });
   $('bulkFlip').addEventListener('click', () => { bulkFlipped = !bulkFlipped; drawBulk(); });
   $('bulkApply').addEventListener('click', async () => {
@@ -239,7 +294,7 @@
       const d = await api('/api/admin/stories/links', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pairs: bulkPairs.map((p) => ({ id: p.story.id, link: p.link.url })) }),
+        body: JSON.stringify({ pairs: bulkPairs.filter((p) => p.include && p.story).map((p) => ({ id: p.story.id, link: p.link.url })) }),
       });
       $('bulkMsg').textContent = d.saved + '개 스토리에 링크를 넣었어요.';
       $('bulkList').hidden = true;
