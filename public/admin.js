@@ -11,7 +11,8 @@
   let token = '';
   try { token = localStorage.getItem(KEY) || ''; } catch (e) { /* storage blocked */ }
   let stories = [];
-  let filter = 'check';
+  // the list opens on every story; the other tabs narrow it down
+  let filter = 'all';
   // category and order for the list; upload order (oldest first) is the default, as link pairing needs it
   let catFilter = 'all';
   let newestFirst = false;
