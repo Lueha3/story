@@ -55,7 +55,7 @@
     $('cntHidden').textContent = stories.filter((s) => s.hidden).length;
     document.querySelectorAll('[data-f]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.f === filter)));
     drawSelBar();
-    const rows = visible().slice(0, 200);
+    const rows = visible();
     if (!rows.length) {
       $('list').innerHTML = '<p class="empty">여기에 해당하는 스토리가 없어요.</p>';
       return;
@@ -131,7 +131,8 @@
 
   async function reload() {
     const data = await api('/api/admin/stories');
-    stories = data.stories;
+    // oldest first: the list reads top to bottom in the order the stories were uploaded
+    stories = data.stories.slice().reverse();
     const todo = stories.filter((s) => !s.linkBox && !s.stickerChecked).length;
     $('locateRow').hidden = !todo;
     $('locate').querySelector('span').textContent = '지난 스토리 버튼 위치 찾기 (' + todo + '개)';
