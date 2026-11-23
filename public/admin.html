@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <title>리딩방 관리</title>
-<link rel="stylesheet" href="/app.css?v=1795427647">
+<link rel="stylesheet" href="/app.css?v=1795428599">
 <style>
 :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
 [hidden] { display: none !important; }
@@ -89,7 +89,8 @@
 .mk-btn[data-mk="sale"][aria-pressed="true"] > span { background: #ffe14a; border: 1px solid #141312; color: #141312; }
 .mk-btn[data-mk="soldout"][aria-pressed="true"] > span,
 .mk-btn[data-mk="expired"][aria-pressed="true"] > span { background: #2a2826; border: 1px solid #2a2826; color: #ffffff; }
-.reg-thumb .card { position: relative; }
+/* the thumbnail link must be a block for its stickers to size to it (cqw) and stay inside it */
+.reg-thumb .card { position: relative; display: block; overflow: hidden; }
 .cat-row { gap: 0 6px; padding-top: 2px; }
 .cat-row .chip > span { height: 30px; padding: 0 11px; font-size: 13px; }
 #admOrder b { font-weight: 700; }
@@ -204,6 +205,6 @@
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795428336"></script>
+<script src="/admin.js?v=1795428599"></script>
 </body>
 </html>

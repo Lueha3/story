@@ -1291,3 +1291,21 @@ body {
     animation: none;
   }
 }
+
+/* Korean sticker words: tighter letter spacing, and a bigger stamp for the short word 품절 */
+.mk-sale b {
+  letter-spacing: 0.02em;
+  font-size: 4.4cqw;
+}
+.mk-stamp {
+  padding: 2.6cqw 6cqw 2.2cqw;
+}
+.mk-over.is-sold .mk-stamp b {
+  font-size: 13cqw;
+  letter-spacing: 0.12em;
+  padding-left: 0.12em;
+}
+.mk-over.is-exp .mk-stamp b {
+  font-size: 10cqw;
+  letter-spacing: 0.04em;
+}

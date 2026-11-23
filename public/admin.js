@@ -69,9 +69,9 @@
     let h = '';
     if (s.saleState === 'soldout' || s.saleState === 'expired') {
       const sold = s.saleState === 'soldout';
-      h += '<div class="mk-over ' + (sold ? 'is-sold' : 'is-exp') + '"><div class="mk-stamp"><b>' + (sold ? 'SOLD OUT' : '기간 만료') + '</b><span>' + (sold ? '품절' : 'EXPIRED') + '</span></div></div>';
+      h += '<div class="mk-over ' + (sold ? 'is-sold' : 'is-exp') + '"><div class="mk-stamp"><b>' + (sold ? '품절' : '기간 만료') + '</b></div></div>';
     }
-    if (s.timeSale) h += '<div class="mk-sale"><i class="mk-dot"></i><b>TIME SALE</b></div>';
+    if (s.timeSale) h += '<div class="mk-sale"><i class="mk-dot"></i><b>타임세일</b></div>';
     return h;
   }
 
