@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { TERM_RULES, unifyTerms } from "./terms";
+import { TERM_RULES, categoryFromName, unifyTerms } from "./terms";
 import { CATEGORIES, type Category, type LinkBox } from "./types";
 
 export interface Classification {
@@ -39,6 +39,9 @@ Categories, in this order:
 - shoes: 신발 (sneakers, loafers, boots, derby shoes, sandals)
 - acc: ACC (bags, caps and hats, belts, socks, jewelry such as bracelets, rings and necklaces, glasses, watches)
 - etc: 기타 (grooming, skincare, perfume, other goods, and any story without a product such as notices)
+
+The product is the one the caption and the price box are about. A model in the photo often wears a whole
+outfit (a jacket over pants, say): sort by the product the caption names, not by the most visible garment.
 
 Fixed rules from the owner:
 - Hood zip-ups, cardigans, shirt jackets and vests are always outer.
@@ -112,7 +115,8 @@ export async function classifyStory(image: Buffer, mediaType: ImageType): Promis
       return { ...UNSORTED, reason: "AI가 이 스토리를 읽지 못했어요. 직접 골라주세요." };
     }
     const r = response.parsed_output;
-    const category: Category = r.is_product ? r.category : "etc";
+    const named = categoryFromName(unifyTerms(r.item_name));
+    const category: Category = !r.is_product ? "etc" : named ?? r.category;
     const alt = !r.confident && r.alternative_category && r.alternative_category !== category ? r.alternative_category : null;
     return {
       category,

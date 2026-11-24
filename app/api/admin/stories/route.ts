@@ -1,7 +1,7 @@
 import { isOwner, unauthorized } from "@/lib/auth";
 import { getStore } from "@/lib/store";
 import { unifyTerms } from "@/lib/terms";
-import { byNewest, orderTime } from "@/lib/types";
+import { byNewest, orderTime, shownCategory } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
@@ -16,6 +16,6 @@ export async function GET(req: Request) {
   }
   // the time shown is the one the list is ordered by
   // and names use one spelling per term (older stories included)
-  const stories = all.sort(byNewest).map((s) => ({ ...s, itemName: unifyTerms(s.itemName), takenAt: new Date(orderTime(s)).toISOString() }));
+  const stories = all.sort(byNewest).map((s) => ({ ...s, category: shownCategory(s), itemName: unifyTerms(s.itemName), takenAt: new Date(orderTime(s)).toISOString() }));
   return Response.json({ stories });
 }

@@ -1,4 +1,4 @@
-import { unifyTerms } from "./terms";
+import { categoryFromName, unifyTerms } from "./terms";
 export const CATEGORIES = ["top", "bottom", "outer", "shoes", "acc", "etc"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
@@ -72,12 +72,18 @@ export interface PublicStory {
   saleState: SaleState;
 }
 
+/** The category to show: the saved one, unless the owner never confirmed it and the name says otherwise. */
+export function shownCategory(s: { category: Category; itemName: string; checked: boolean }): Category {
+  if (s.checked) return s.category;
+  return categoryFromName(unifyTerms(s.itemName)) ?? s.category;
+}
+
 export function toPublic(s: Story): PublicStory {
   return {
     id: s.id,
     imageUrl: s.imageUrl,
     takenAt: new Date(orderTime(s)).toISOString(),
-    category: s.category,
+    category: shownCategory(s),
     itemName: unifyTerms(s.itemName),
     priceText: s.priceText,
     link: s.link,
