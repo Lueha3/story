@@ -1309,3 +1309,14 @@ body {
   font-size: 10cqw;
   letter-spacing: 0.04em;
 }
+
+/* the order switch sits at the left end of the category bar */
+.tabs .order-btn {
+  order: -1;
+  padding: 0 12px 0 max(16px, env(safe-area-inset-left, 0px));
+  border-left: 0;
+  border-right: 1px solid var(--line);
+}
+.tabs .order-btn + .tabs-list {
+  padding-left: 10px;
+}
