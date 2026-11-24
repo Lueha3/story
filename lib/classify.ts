@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
+import { TERM_RULES, unifyTerms } from "./terms";
 import { CATEGORIES, type Category, type LinkBox } from "./types";
 
 export interface Classification {
@@ -48,6 +49,7 @@ Fill the fields like this:
 - link_sticker: the bounding box of the link sticker (a rounded white pill with a chain-link icon and text such as "상품링크" or "상품 링크"), as fractions of the image: left and right are fractions of the image width, top and bottom fractions of the image height, each from 0 to 1, measured from the top-left corner. Be as exact as you can: a button is placed over this box. null when the story has no link sticker.
 - is_product: false when the story shows no product.
 - item_name: a short Korean product name a shopper would recognise, without the brand when the brand is unclear (e.g. "카고 팬츠", "스케이트 로퍼"). Empty when there is no product.
+  Spell fashion terms the same way every time: ${TERM_RULES}.
 - price_text: the discount and final price exactly as printed, e.g. "33% 99,830원". Empty when no price is printed.
 - confident: false only when the image genuinely allows two categories (for example a thick shirt that may be a shirt jacket). A fixed rule above settles a case, so it is then confident.
 - alternative_category: the other plausible category when confident is false, otherwise null.
@@ -114,7 +116,7 @@ export async function classifyStory(image: Buffer, mediaType: ImageType): Promis
     const alt = !r.confident && r.alternative_category && r.alternative_category !== category ? r.alternative_category : null;
     return {
       category,
-      itemName: r.item_name.trim(),
+      itemName: unifyTerms(r.item_name),
       priceText: r.price_text.trim(),
       sure: r.confident || !alt,
       altCategory: alt,

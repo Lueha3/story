@@ -1,3 +1,4 @@
+import { unifyTerms } from "./terms";
 export const CATEGORIES = ["top", "bottom", "outer", "shoes", "acc", "etc"] as const;
 export type Category = (typeof CATEGORIES)[number];
 
@@ -77,7 +78,7 @@ export function toPublic(s: Story): PublicStory {
     imageUrl: s.imageUrl,
     takenAt: new Date(orderTime(s)).toISOString(),
     category: s.category,
-    itemName: s.itemName,
+    itemName: unifyTerms(s.itemName),
     priceText: s.priceText,
     link: s.link,
     linkBox: s.linkBox ?? null,

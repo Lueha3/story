@@ -1,5 +1,6 @@
 import { isOwner, unauthorized } from "@/lib/auth";
 import { cleanUrl } from "@/lib/stories";
+import { unifyTerms } from "@/lib/terms";
 import { getStore } from "@/lib/store";
 import { isCategory, type Story } from "@/lib/types";
 
@@ -38,7 +39,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     if (v !== null && v !== "soldout" && v !== "expired") return Response.json({ error: "없는 표시예요." }, { status: 400 });
     patch.saleState = v;
   }
-  if ("itemName" in body && typeof body.itemName === "string") patch.itemName = body.itemName.trim().slice(0, 80);
+  if ("itemName" in body && typeof body.itemName === "string") patch.itemName = unifyTerms(body.itemName).slice(0, 80);
 
   const store = await getStore();
   const story = await store.updateStory(id, patch);
