@@ -43,9 +43,9 @@
     s.isNew = Date.now() - t <= 60 * MIN;
     return s;
   }
-  // newest first by default; a visitor can flip it to oldest first, and the choice is remembered
-  let oldestFirst = false;
-  try { oldestFirst = localStorage.getItem('honey-order') === 'old'; } catch (e) { /* storage blocked */ }
+  // oldest first by default; a visitor can flip it to newest first, and the choice is remembered
+  let oldestFirst = true;
+  try { oldestFirst = localStorage.getItem('honey-order') !== 'new'; } catch (e) { /* storage blocked */ }
   const listOf = (cat) => {
     const l = STORIES.filter((s) => s.cat === cat);
     return oldestFirst ? l.reverse() : l;
