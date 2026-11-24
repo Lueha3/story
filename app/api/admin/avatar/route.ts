@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 // Replaces the profile photo: the picture is cut to a centred 400px square.
 export async function POST(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   let file: unknown;
   try {
     file = (await req.formData()).get("file");

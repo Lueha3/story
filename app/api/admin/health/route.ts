@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // What is connected, for the status box on the admin page. Never returns the values themselves.
 export async function GET(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   let database = false;
   let databaseError = "";
   try {

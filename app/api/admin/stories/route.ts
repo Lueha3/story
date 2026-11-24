@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 // Everything, hidden stories and internal notes included. Owner only.
 export async function GET(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   let all;
   try {
     all = await (await getStore()).listStories();

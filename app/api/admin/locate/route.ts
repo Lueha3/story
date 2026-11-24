@@ -6,7 +6,7 @@ export const maxDuration = 60;
 
 // Looks for the link sticker in a few older stories per call; the admin page calls it until none are left.
 export async function POST(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   try {
     return Response.json(await locateStickers(3));
   } catch (err) {

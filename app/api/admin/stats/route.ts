@@ -6,7 +6,7 @@ export const dynamic = "force-dynamic";
 
 // Visitor totals for the admin page.
 export async function GET(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   try {
     return Response.json(await (await getStore()).stats(kstDay(Date.now())));
   } catch (err) {

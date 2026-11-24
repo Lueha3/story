@@ -7,7 +7,7 @@ export const maxDuration = 60;
 
 // Gives many stories their product links at once. Body: { "pairs": [{ "id": "...", "link": "https://..." }, ...] }
 export async function POST(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   let pairs: unknown;
   try {
     pairs = ((await req.json()) as { pairs?: unknown }).pairs;

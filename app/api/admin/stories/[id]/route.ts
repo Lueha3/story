@@ -10,7 +10,7 @@ type Ctx = { params: Promise<{ id: string }> };
 
 /** Owner fixes: { category } | { link: string | null } | { hidden: boolean } | { itemName } */
 export async function PATCH(req: Request, ctx: Ctx) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   const { id } = await ctx.params;
   let body: Record<string, unknown>;
   try {
@@ -48,7 +48,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
 }
 
 export async function DELETE(req: Request, ctx: Ctx) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   const { id } = await ctx.params;
   const store = await getStore();
   const story = await store.getStory(id);

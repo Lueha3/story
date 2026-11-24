@@ -6,7 +6,7 @@ export const maxDuration = 60;
 
 // Deletes several stories, pictures included. Body: { "ids": ["...", ...] }
 export async function POST(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   let ids: unknown;
   try {
     ids = ((await req.json()) as { ids?: unknown }).ids;

@@ -8,7 +8,7 @@ export const maxDuration = 300;
 // the pairs for checking and saves them through /api/admin/stories/links.
 // Body: { "links": [{ "url": "...", "hint": "..." }], "storyIds": ["..."] }
 export async function POST(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   let body: { links?: unknown; storyIds?: unknown };
   try {
     body = await req.json();

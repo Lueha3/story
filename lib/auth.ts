@@ -24,10 +24,12 @@ function safeDecode(v: string): string {
   }
 }
 
-export function unauthorized() {
+export function unauthorized(req?: Request) {
   const raw = process.env.ADMIN_TOKEN;
   const secret = raw === undefined ? undefined : raw.trim();
-  let error = "비밀번호가 맞지 않아요.";
+  // tells "no password came with the request" apart from "a password came but it is not this one"
+  const sent = req ? /^bearer\s+\S/i.test(req.headers.get("authorization") || "") : true;
+  let error = sent ? "비밀번호가 맞지 않아요." : "비밀번호가 함께 오지 않았어요.";
   if (secret === undefined) error = "서버에서 ADMIN_TOKEN을 찾지 못했어요. 이름 철자와 Production 체크를 확인하고 다시 배포해 주세요.";
   else if (secret.length < 12) error = "서버의 ADMIN_TOKEN이 " + secret.length + "자예요. 12자 이상으로 바꾸고 다시 배포해 주세요.";
   return Response.json({ error }, { status: 401 });

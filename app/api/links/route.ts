@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
  * The link joins a story posted in the last 15 minutes that has none, or waits for the next story.
  */
 export async function POST(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   const text = await req.text();
   let raw: unknown = text;
   try {
@@ -29,7 +29,7 @@ export async function POST(req: Request) {
 }
 
 export async function GET(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
   const store = await getStore();
   return Response.json({ links: await store.listLinks() });
 }

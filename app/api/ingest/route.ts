@@ -14,7 +14,7 @@ const MAX_BYTES = 25 * 1024 * 1024;
  * Images already received are skipped, so the shortcut can safely resend its last few photos.
  */
 export async function POST(req: Request) {
-  if (!isOwner(req)) return unauthorized();
+  if (!isOwner(req)) return unauthorized(req);
 
   let form: FormData;
   try {
