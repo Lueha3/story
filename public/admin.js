@@ -321,6 +321,68 @@
     $('bulkAi').disabled = false;
   }
   $('bulkAi').addEventListener('click', aiMatch);
+
+  // In order, saved at once: the 1st link goes to the oldest photo still without a link, the 2nd to the
+  // next, and so on (upload order, every tab and category). For links already lined up with the photos.
+  let lastOrdered = [];
+  async function saveLinks(pairs) {
+    return api('/api/admin/stories/links', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pairs: pairs }),
+    });
+  }
+  $('bulkOrder').addEventListener('click', async () => {
+    const links = readLinks($('bulkText').value);
+    if (!links.length) { renderBulk('글에서 링크를 찾지 못했어요.'); return; }
+    // stories is already in upload order (oldest first)
+    const targets = stories.filter((s) => !s.hidden && !s.link);
+    if (!targets.length) { renderBulk('링크가 없는 사진이 없어요. 모든 사진에 이미 링크가 있어요.'); return; }
+    const n = Math.min(links.length, targets.length);
+    $('bulkOrder').disabled = true;
+    try {
+      const pairs = [];
+      for (let i = 0; i < n; i += 1) pairs.push({ id: targets[i].id, link: links[i].url });
+      const d = await saveLinks(pairs);
+      lastOrdered = pairs.map((p) => p.id);
+      bulkPairs = [];
+      for (let i = 0; i < n; i += 1) bulkPairs.push({ story: targets[i], link: links[i], include: true, sure: true, why: '' });
+      let msg = '올린 순서대로 ' + d.saved + '개 넣었어요. 아래에서 맞게 들어갔는지 확인하세요.';
+      if (links.length > targets.length) msg += ' 링크가 ' + (links.length - targets.length) + '개 남았어요(링크 없는 사진보다 많아요).';
+      if (links.length < targets.length) msg += ' 링크 없는 사진이 ' + (targets.length - links.length) + '장 남았어요.';
+      renderBulk(msg);
+      $('bulkList').querySelectorAll('input[data-inc]').forEach((b) => { b.disabled = true; });
+      $('bulkApply').hidden = true;
+      $('bulkUndo').hidden = false;
+      await reload();
+    } catch (err) {
+      renderBulk(err.message);
+    }
+    $('bulkOrder').disabled = false;
+  });
+  $('bulkUndo').addEventListener('click', async () => {
+    if (!lastOrdered.length) return;
+    $('bulkUndo').disabled = true;
+    try {
+      for (const id of lastOrdered) {
+        await api('/api/admin/stories/' + encodeURIComponent(id), {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ link: null }),
+        });
+      }
+      renderBulk(lastOrdered.length + '개 링크를 되돌렸어요.');
+      bulkPairs = [];
+      $('bulkList').hidden = true;
+      $('bulkApply').hidden = true;
+      lastOrdered = [];
+      $('bulkUndo').hidden = true;
+      await reload();
+    } catch (err) {
+      say(err.message);
+    }
+    $('bulkUndo').disabled = false;
+  });
   $('bulkApply').addEventListener('click', async () => {
     if (!bulkPairs.length) return;
     $('bulkApply').disabled = true;
