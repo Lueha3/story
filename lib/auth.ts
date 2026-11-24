@@ -6,7 +6,10 @@ export function isOwner(req: Request): boolean {
   const secret = (process.env.ADMIN_TOKEN || "").trim().normalize("NFC");
   if (secret.length < 12) return false;
   const header = req.headers.get("authorization") || "";
-  const given = header.startsWith("Bearer ") ? safeDecode(header.slice(7)).trim().normalize("NFC") : "";
+  // A password saved together with its "Bearer " prefix arrives as "Bearer Bearer ..."; accept that too.
+  const given = /^bearer\s+/i.test(header)
+    ? safeDecode(header.replace(/^(bearer\s+)+/i, "")).trim().normalize("NFC")
+    : "";
   const a = Buffer.from(given);
   const b = Buffer.from(secret);
   return a.length === b.length && timingSafeEqual(a, b);
