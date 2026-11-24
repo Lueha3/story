@@ -85,7 +85,7 @@
     drawSelBar();
     const rows = visible();
     if (!rows.length) {
-      $('list').innerHTML = '<p class="empty">여기에 해당하는 스토리가 없어요.</p>';
+      $('list').innerHTML = '<p class="empty">' + (catFilter !== 'all' && byStatus().length ? (CATS.find((c) => c[0] === catFilter) || ['', ''])[1] + '에 해당하는 스토리가 없어요. 위에서 \'전체\'를 눌러 보세요.' : '여기에 해당하는 스토리가 없어요.') + '</p>';
       return;
     }
     $('list').innerHTML = rows.map((s) => {
@@ -220,7 +220,7 @@
     if (e.key === 'Enter') { token = $('token').value.trim(); login(); }
   });
 
-  document.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => { filter = b.dataset.f; render(); }));
+  document.querySelectorAll('[data-f]').forEach((b) => b.addEventListener('click', () => { filter = b.dataset.f; catFilter = 'all'; render(); }));
   $('catRow').addEventListener('click', (e) => {
     const b = e.target.closest('[data-cf]');
     if (!b) return;
