@@ -1364,3 +1364,10 @@ body {
   letter-spacing: -0.01em;
   padding-left: 0;
 }
+
+/* 품절 / 기간만료: only the label, the photo itself stays as it is */
+.mk-over {
+  background: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
