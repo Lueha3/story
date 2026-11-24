@@ -109,8 +109,8 @@
         '<button type="button" class="mk-btn" data-mk="soldout" aria-pressed="' + (s.saleState === 'soldout') + '"><span>품절</span></button>' +
         '<button type="button" class="mk-btn" data-mk="expired" aria-pressed="' + (s.saleState === 'expired') + '"><span>기간만료</span></button>' +
         '</div>' +
-        '<div class="reg-l"><input type="url" value="' + esc(s.link || '') + '" placeholder="상품링크 붙여넣기" aria-label="상품링크">' +
-        '<button type="button" class="pill" data-act="link"><span>저장</span></button></div>' +
+        '<div class="reg-l"><input type="url" data-link value="' + esc(s.link || '') + '" placeholder="상품링크 붙여넣기 (자동 저장)" aria-label="상품링크" enterkeyhint="done">' +
+        '</div>' +
         '<div class="row">' +
         '<button type="button" class="pill" data-act="hide"><span>' + (s.hidden ? '다시 보이기' : '숨기기') + '</span></button>' +
         '<button type="button" class="pill danger" data-act="delete"><span>' + (armedDelete === s.id ? '한 번 더 누르면 삭제' : '삭제') + '</span></button>' +
@@ -413,6 +413,37 @@
       return d.story;
     });
   }
+
+  // A pasted or typed link saves by itself: right after a paste, and when the field is left or Enter is pressed.
+  async function saveRowLink(input) {
+    const row = input.closest('.reg-row');
+    const s = row && stories.find((x) => x.id === row.dataset.id);
+    if (!s) return;
+    const v = input.value.trim();
+    if ((s.link || '') === v) return;
+    if (v && !/^https?:\/\/\S+$/i.test(v) && !/https?:\/\//i.test(v)) { say('링크 형식이 아니에요. https:// 로 시작하는 주소를 넣어주세요.'); return; }
+    try {
+      await update(s, { link: v || null });
+      input.value = s.link || '';
+      say(s.link ? '링크를 저장했어요' : '링크를 지웠어요');
+      drawCats();
+      drawSelBar();
+    } catch (err) {
+      say(err.message);
+    }
+  }
+  $('list').addEventListener('paste', (e) => {
+    const input = e.target.closest('input[data-link]');
+    if (input) setTimeout(() => saveRowLink(input), 0);
+  });
+  $('list').addEventListener('keydown', (e) => {
+    const input = e.target.closest('input[data-link]');
+    if (input && e.key === 'Enter') { e.preventDefault(); input.blur(); }
+  });
+  $('list').addEventListener('focusout', (e) => {
+    const input = e.target.closest('input[data-link]');
+    if (input) saveRowLink(input);
+  });
 
   $('list').addEventListener('change', (e) => {
     const box = e.target.closest('input[data-sel]');
