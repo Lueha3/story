@@ -43,9 +43,9 @@
     s.isNew = Date.now() - t <= 60 * MIN;
     return s;
   }
-  // oldest first by default; a visitor can flip it to newest first, and the choice is remembered
+  // oldest first every time the site opens; the switch only changes it until the page is reloaded
   let oldestFirst = true;
-  try { oldestFirst = localStorage.getItem('honey-order') !== 'new'; } catch (e) { /* storage blocked */ }
+  try { localStorage.removeItem('honey-order'); } catch (e) { /* storage blocked */ }
   const listOf = (cat) => {
     const l = STORIES.filter((s) => s.cat === cat);
     return oldestFirst ? l.reverse() : l;
@@ -173,7 +173,6 @@
   drawOrder();
   $('orderBtn').addEventListener('click', () => {
     oldestFirst = !oldestFirst;
-    try { localStorage.setItem('honey-order', oldestFirst ? 'old' : 'new'); } catch (e) { /* storage blocked */ }
     drawOrder();
     renderFeed();
   });
