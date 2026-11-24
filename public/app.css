@@ -1320,3 +1320,47 @@ body {
 .tabs .order-btn + .tabs-list {
   padding-left: 10px;
 }
+
+/* ---- sticker designs supplied by the owner: plain rounded labels ----
+   타임세일: black with white letters. 품절 / 기간만료: white with a dark outline, set flat (no tilt). */
+.mk-sale {
+  gap: 0;
+  padding: 1.5cqw 4.6cqw 1.3cqw;
+  border-radius: 99px;
+  background: #0b0b0b;
+  color: #ffffff;
+  box-shadow: 0 0.6cqw 2.4cqw rgba(0, 0, 0, 0.3);
+}
+.mk-sale b {
+  font-family: 'GmarketSans', var(--font);
+  font-size: 5cqw;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding-top: 0.2cqw;
+}
+.mk-stamp {
+  transform: translate(-50%, -50%);
+  padding: 2.2cqw 7cqw 1.9cqw;
+  border: 1.1cqw solid #111111;
+  border-radius: 99px;
+  outline: 0;
+  background: #ffffff;
+  color: #0b0b0b;
+  text-shadow: none;
+  box-shadow: 0 0.8cqw 3cqw rgba(0, 0, 0, 0.35);
+}
+.mk-over.is-exp .mk-stamp {
+  color: #0b0b0b;
+  border-color: #3d3d3d;
+}
+.mk-stamp b,
+.mk-over.is-sold .mk-stamp b,
+.mk-over.is-exp .mk-stamp b {
+  font-family: 'GmarketSans', var(--font);
+  font-size: 9.5cqw;
+  line-height: 1.1;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  padding-left: 0;
+}

@@ -71,7 +71,7 @@
       const sold = s.saleState === 'soldout';
       h += '<div class="mk-over ' + (sold ? 'is-sold' : 'is-exp') + '"><div class="mk-stamp"><b>' + (sold ? '품절' : '기간만료') + '</b></div></div>';
     }
-    if (s.timeSale) h += '<div class="mk-sale"><i class="mk-dot"></i><b>타임세일</b></div>';
+    if (s.timeSale) h += '<div class="mk-sale"><b>타임세일</b></div>';
     return h;
   }
 

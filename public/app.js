@@ -96,7 +96,6 @@
     tabsList.innerHTML = html;
   }
   // Stickers over a story picture: time sale at the top, sold out / expired as a stamp a little above the middle.
-  const CLOCK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2"/><path d="M9.5 2.5h5"/></svg>';
   function marksHTML(s) {
     let h = '';
     if (s.saleState === 'soldout' || s.saleState === 'expired') {
@@ -104,7 +103,7 @@
       h += '<div class="mk-over ' + (sold ? 'is-sold' : 'is-exp') + '"><div class="mk-stamp">' +
         '<b>' + (sold ? '품절' : '기간만료') + '</b></div></div>';
     }
-    if (s.timeSale) h += '<div class="mk-sale"><i class="mk-dot"></i>' + CLOCK_ICON + '<b>타임세일</b></div>';
+    if (s.timeSale) h += '<div class="mk-sale"><b>타임세일</b></div>';
     return h;
   }
   const marksLabel = (s) => (s.timeSale ? ', 타임세일' : '') + (s.saleState === 'soldout' ? ', 품절' : s.saleState === 'expired' ? ', 기간만료' : '');
