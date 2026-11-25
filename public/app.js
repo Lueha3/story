@@ -51,6 +51,12 @@
     return oldestFirst ? l.reverse() : l;
   };
 
+  // the 전체 view leads each category with the owner's 대표 picks, in the order they were picked
+  const frontOf = (list) => {
+    const up = list.filter((s) => s.pinnedAt).sort((a, b) => Date.parse(a.pinnedAt) - Date.parse(b.pinnedAt));
+    return up.length ? up.concat(list.filter((s) => !s.pinnedAt)) : list;
+  };
+
   async function load() {
     const res = await fetch('/api/stories', { cache: 'no-store' });
     if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -129,7 +135,7 @@
         if (!list.length) return;
         html += '<section><div class="sec-h gut"><div class="sec-t"><h2>' + c[1] + '</h2><span>' + list.length + '개</span></div>' +
           '<button type="button" class="pill more-btn" data-tab="' + c[0] + '" aria-label="' + c[1] + ' 전체 보기"><span>전체 보기' + CHEV_ICON + '</span></button></div>' +
-          '<div class="grid">' + list.slice(0, 9).map(tileHTML).join('') + '</div></section>';
+          '<div class="grid">' + frontOf(list).slice(0, 9).map(tileHTML).join('') + '</div></section>';
       });
     } else {
       const list = listOf(tab);

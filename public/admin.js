@@ -49,6 +49,7 @@
     if (filter === 'check') return stories.filter((s) => !s.hidden && (!s.sure || s.status === 'failed'));
     if (filter === 'nolink') return stories.filter((s) => !s.hidden && !s.link && s.status !== 'pending');
     if (filter === 'hidden') return stories.filter((s) => s.hidden);
+    if (filter === 'pin') return stories.filter((s) => s.pinnedAt).sort((a, b) => Date.parse(a.pinnedAt) - Date.parse(b.pinnedAt));
     return stories;
   }
   function visible() {
@@ -80,6 +81,7 @@
     $('cntNolink').textContent = stories.filter((s) => !s.hidden && !s.link && s.status !== 'pending').length;
     $('cntAll').textContent = stories.length;
     $('cntHidden').textContent = stories.filter((s) => s.hidden).length;
+    $('cntPin').textContent = stories.filter((s) => s.pinnedAt).length;
     document.querySelectorAll('[data-f]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.f === filter)));
     drawCats();
     drawSelBar();
@@ -105,6 +107,7 @@
         CATS.map((c) => '<button type="button" data-cat="' + c[0] + '" aria-pressed="' + (s.category === c[0]) + '"><span>' + c[1] + '</span></button>').join('') +
         '</div>' +
         '<div class="reg-mk" role="group" aria-label="사진 위 표시">' +
+        '<button type="button" class="mk-btn" data-mk="pin" aria-pressed="' + Boolean(s.pinnedAt) + '"><span>★ 대표</span></button>' +
         '<button type="button" class="mk-btn" data-mk="sale" aria-pressed="' + Boolean(s.timeSale) + '"><span>타임세일</span></button>' +
         '<button type="button" class="mk-btn" data-mk="soldout" aria-pressed="' + (s.saleState === 'soldout') + '"><span>품절</span></button>' +
         '<button type="button" class="mk-btn" data-mk="expired" aria-pressed="' + (s.saleState === 'expired') + '"><span>기간만료</span></button>' +
@@ -466,13 +469,21 @@
       if (mk) {
         // time sale switches on and off; sold out and expired replace each other, a second tap clears
         let patch;
+        if (mk.dataset.mk === 'pin') {
+          const was = Boolean(s.pinnedAt);
+          await update(s, { pinned: !was });
+          render();
+          say(was ? '대표에서 뺐어요' : "대표로 올렸어요. '전체' 화면 맨 앞에 나와요");
+          return;
+        }
+        const hadPin = Boolean(s.pinnedAt);
         if (mk.dataset.mk === 'sale') patch = { timeSale: !s.timeSale };
         else patch = { saleState: s.saleState === mk.dataset.mk ? null : mk.dataset.mk };
         await update(s, patch);
         render();
         const names = { sale: '타임세일', soldout: '품절', expired: '기간만료' };
         const on = mk.dataset.mk === 'sale' ? s.timeSale : s.saleState === mk.dataset.mk;
-        say(names[mk.dataset.mk] + (on ? ' 표시를 붙였어요' : ' 표시를 뗐어요'));
+        say(names[mk.dataset.mk] + (on ? ' 표시를 붙였어요' : ' 표시를 뗐어요') + (hadPin && !s.pinnedAt ? '. 대표에서도 뺐어요' : ''));
         return;
       }
       const catBtn = e.target.closest('button[data-cat]');

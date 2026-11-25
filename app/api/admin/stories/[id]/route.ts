@@ -39,6 +39,9 @@ export async function PATCH(req: Request, ctx: Ctx) {
     if (v !== null && v !== "soldout" && v !== "expired") return Response.json({ error: "없는 표시예요." }, { status: 400 });
     patch.saleState = v;
   }
+  if ("pinned" in body) patch.pinnedAt = body.pinned ? new Date().toISOString() : null;
+  // a deal that is over, or a hidden story, does not stay up front
+  if (patch.saleState || patch.hidden) patch.pinnedAt = null;
   if ("itemName" in body && typeof body.itemName === "string") patch.itemName = unifyTerms(body.itemName).slice(0, 80);
 
   const store = await getStore();

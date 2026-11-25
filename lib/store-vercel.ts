@@ -32,6 +32,7 @@ function rowToStory(r: Row): Story {
     stickerChecked: Boolean(r.sticker_checked),
     timeSale: Boolean(r.time_sale),
     saleState: r.sale_state === "soldout" || r.sale_state === "expired" ? r.sale_state : null,
+    pinnedAt: r.pinned_at ? iso(r.pinned_at) : null,
   };
 }
 
@@ -73,6 +74,7 @@ const STORY_COLS: Record<keyof Story, string> = {
   stickerChecked: "sticker_checked",
   timeSale: "time_sale",
   saleState: "sale_state",
+  pinnedAt: "pinned_at",
 };
 
 const LINK_COLS: Record<keyof QueuedLink, string> = {
@@ -126,6 +128,7 @@ export function createVercelStore(databaseUrl: string): Store {
         await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS sticker_checked boolean NOT NULL DEFAULT false`;
         await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS time_sale boolean NOT NULL DEFAULT false`;
         await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS sale_state text`;
+        await sql`ALTER TABLE stories ADD COLUMN IF NOT EXISTS pinned_at timestamptz`;
         await sql`CREATE TABLE IF NOT EXISTS settings (key text PRIMARY KEY, value text NOT NULL)`;
         await sql`CREATE TABLE IF NOT EXISTS events (
           id bigserial PRIMARY KEY,

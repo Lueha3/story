@@ -49,6 +49,8 @@ export interface Story {
   /** Marks shown on the picture: a time sale, and whether the deal is over. */
   timeSale?: boolean;
   saleState?: SaleState;
+  /** Set when the owner marks the story as 대표: it leads its category on the 전체 view, earliest mark first. */
+  pinnedAt?: string | null;
 }
 
 export interface QueuedLink {
@@ -70,6 +72,7 @@ export interface PublicStory {
   linkBox: LinkBox | null;
   timeSale: boolean;
   saleState: SaleState;
+  pinnedAt: string | null;
 }
 
 /** The category to show: the saved one, unless the owner never confirmed it and the name says otherwise. */
@@ -90,6 +93,7 @@ export function toPublic(s: Story): PublicStory {
     linkBox: s.linkBox ?? null,
     timeSale: Boolean(s.timeSale),
     saleState: s.saleState ?? null,
+    pinnedAt: s.pinnedAt ?? null,
   };
 }
 
