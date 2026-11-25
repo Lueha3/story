@@ -90,36 +90,127 @@
       $('list').innerHTML = '<p class="empty">' + (catFilter !== 'all' && byStatus().length ? (CATS.find((c) => c[0] === catFilter) || ['', ''])[1] + '에 해당하는 스토리가 없어요. 위에서 \'전체\'를 눌러 보세요.' : '여기에 해당하는 스토리가 없어요.') + '</p>';
       return;
     }
-    $('list').innerHTML = rows.map((s) => {
-      let badge = '<span class="badge">' + (s.checked ? '확인함' : '자동') + '</span>';
-      if (s.status === 'pending') badge = '<span class="badge">분류 중</span>';
-      else if (s.status === 'failed') badge = '<span class="badge warn">분류 실패</span>';
-      else if (!s.sure) badge = '<span class="badge warn">확인 필요</span>';
-      const note = !s.sure || s.status === 'failed' ? (s.reason || '') + (s.altCategory ? ' (' + LABEL[s.altCategory] + '일 수도 있어요)' : '') : '';
-      return '<div class="reg-row' + (s.hidden ? ' is-hidden' : '') + (sel.has(s.id) ? ' is-sel' : '') + '" data-id="' + esc(s.id) + '">' +
-        (selecting ? '<div class="reg-sel"><label><input type="checkbox" data-sel' + (sel.has(s.id) ? ' checked' : '') + ' aria-label="' + esc((s.itemName || '이름 없음') + ' 선택') + '"></label></div>' : '') +
-        '<div class="reg-thumb"><a class="card" href="' + esc(s.imageUrl) + '" target="_blank" rel="noopener"><img src="' + esc(s.imageUrl) + '" alt="스토리 이미지" loading="lazy">' + thumbMarks(s) + '</a></div>' +
-        '<div class="reg-b"><div class="reg-n"><b>' + esc(s.itemName || '이름 없음') + '</b>' + badge + '</div>' +
-        '<span class="reg-m">' + when(s.takenAt) + (s.priceText ? ' · ' + esc(s.priceText) : '') + '</span>' +
-        (lastPer ? '<span class="reg-stat">30일 조회 ' + ((lastPer[s.id] || {}).views || 0) + ' · 클릭 ' + ((lastPer[s.id] || {}).clicks || 0) + '</span>' : '') +
-        (note ? '<span class="rule">' + esc(note) + '</span>' : '') +
-        '<div class="reg-c" role="group" aria-label="카테고리">' +
-        CATS.map((c) => '<button type="button" data-cat="' + c[0] + '" aria-pressed="' + (s.category === c[0]) + '"><span>' + c[1] + '</span></button>').join('') +
-        '</div>' +
-        '<div class="reg-mk" role="group" aria-label="사진 위 표시">' +
-        '<button type="button" class="mk-btn" data-mk="pin" aria-pressed="' + Boolean(s.pinnedAt) + '"><span>★ 대표</span></button>' +
-        '<button type="button" class="mk-btn" data-mk="sale" aria-pressed="' + Boolean(s.timeSale) + '"><span>타임세일</span></button>' +
-        '<button type="button" class="mk-btn" data-mk="soldout" aria-pressed="' + (s.saleState === 'soldout') + '"><span>품절</span></button>' +
-        '<button type="button" class="mk-btn" data-mk="expired" aria-pressed="' + (s.saleState === 'expired') + '"><span>기간만료</span></button>' +
-        '</div>' +
-        '<div class="reg-l"><input type="url" data-link value="' + esc(s.link || '') + '" placeholder="상품링크 붙여넣기 (자동 저장)" aria-label="상품링크" enterkeyhint="done">' +
-        '</div>' +
-        '<div class="row">' +
-        '<button type="button" class="pill" data-act="hide"><span>' + (s.hidden ? '다시 보이기' : '숨기기') + '</span></button>' +
-        '<button type="button" class="pill danger" data-act="delete"><span>' + (armedDelete === s.id ? '한 번 더 누르면 삭제' : '삭제') + '</span></button>' +
-        '</div></div></div>';
-    }).join('');
+    $('list').innerHTML = rows.map(tileHTML).join('');
+    drawEdit();
   }
+
+  // The list looks like the site: a grid of story pictures with their stickers. Small tags say what
+  // still needs doing. Tapping a picture opens it with the form that manages it.
+  function tileHTML(s) {
+    let tags = '';
+    if (s.pinnedAt) tags += '<i class="t-pin">★</i>';
+    if (s.hidden) tags += '<i class="t-dim">숨김</i>';
+    if (s.status === 'pending') tags += '<i>분류 중</i>';
+    else if (s.status === 'failed') tags += '<i class="t-warn">분류 실패</i>';
+    else if (!s.sure) tags += '<i class="t-warn">확인 필요</i>';
+    if (!s.link && s.status !== 'pending') tags += '<i class="t-bad">링크 없음</i>';
+    const on = sel.has(s.id);
+    return '<button type="button" class="a-tile' + (s.hidden ? ' is-hidden' : '') + (on ? ' is-sel' : '') + '" data-id="' + esc(s.id) + '"' + (selecting ? ' aria-pressed="' + on + '"' : '') +
+      ' aria-label="' + esc((s.itemName || '이름 없음') + (selecting ? ' 선택' : ' 관리하기')) + '">' +
+      '<div class="card"><img src="' + esc(s.imageUrl) + '" alt="" loading="lazy" decoding="async">' + thumbMarks(s) +
+      (tags ? '<span class="a-tags">' + tags + '</span>' : '') + (selecting ? '<span class="a-chk" aria-hidden="true">' + (on ? '✓' : '') + '</span>' : '') + '</div>' +
+      '<span class="a-name">' + esc(s.itemName || '이름 없음') + '</span></button>';
+  }
+
+  function formHTML(s) {
+    let badge = '<span class="badge">' + (s.checked ? '확인함' : '자동') + '</span>';
+    if (s.status === 'pending') badge = '<span class="badge">분류 중</span>';
+    else if (s.status === 'failed') badge = '<span class="badge warn">분류 실패</span>';
+    else if (!s.sure) badge = '<span class="badge warn">확인 필요</span>';
+    const note = !s.sure || s.status === 'failed' ? (s.reason || '') + (s.altCategory ? ' (' + LABEL[s.altCategory] + '일 수도 있어요)' : '') : '';
+    return '<div class="reg-row' + (s.hidden ? ' is-hidden' : '') + '" data-id="' + esc(s.id) + '">' +
+      '<div class="edit-pic"><a class="card" href="' + esc(s.imageUrl) + '" target="_blank" rel="noopener" aria-label="사진 크게 보기"><img src="' + esc(s.imageUrl) + '" alt="스토리 이미지">' + thumbMarks(s) + '</a></div>' +
+      '<div class="reg-b"><div class="reg-n"><b>' + esc(s.itemName || '이름 없음') + '</b>' + badge + '</div>' +
+      '<span class="reg-m">' + when(s.takenAt) + (s.priceText ? ' · ' + esc(s.priceText) : '') + '</span>' +
+      (lastPer ? '<span class="reg-stat">30일 조회 ' + ((lastPer[s.id] || {}).views || 0) + ' · 클릭 ' + ((lastPer[s.id] || {}).clicks || 0) + '</span>' : '') +
+      (note ? '<span class="rule">' + esc(note) + '</span>' : '') +
+      '<h3>카테고리</h3><div class="reg-c" role="group" aria-label="카테고리">' +
+      CATS.map((c) => '<button type="button" data-cat="' + c[0] + '" aria-pressed="' + (s.category === c[0]) + '"><span>' + c[1] + '</span></button>').join('') +
+      '</div>' +
+      '<h3>표시</h3><div class="reg-mk" role="group" aria-label="사진 위 표시">' +
+      '<button type="button" class="mk-btn" data-mk="pin" aria-pressed="' + Boolean(s.pinnedAt) + '"><span>★ 대표</span></button>' +
+      '<button type="button" class="mk-btn" data-mk="sale" aria-pressed="' + Boolean(s.timeSale) + '"><span>타임세일</span></button>' +
+      '<button type="button" class="mk-btn" data-mk="soldout" aria-pressed="' + (s.saleState === 'soldout') + '"><span>품절</span></button>' +
+      '<button type="button" class="mk-btn" data-mk="expired" aria-pressed="' + (s.saleState === 'expired') + '"><span>기간만료</span></button>' +
+      '</div>' +
+      '<h3>상품링크</h3><div class="reg-l"><input type="url" id="editLink" data-link value="' + esc(s.link || '') + '" placeholder="상품링크 붙여넣기 (자동 저장)" aria-label="상품링크" enterkeyhint="done">' +
+      '</div>' +
+      '<div class="row edit-acts">' +
+      '<button type="button" class="pill" data-act="hide"><span>' + (s.hidden ? '다시 보이기' : '숨기기') + '</span></button>' +
+      '<button type="button" class="pill danger" data-act="delete"><span>' + (armedDelete === s.id ? '한 번 더 누르면 삭제' : '삭제') + '</span></button>' +
+      '</div></div></div>';
+  }
+
+  // ---- the story being managed ----
+  let editId = null;
+  let editSeq = [];
+  let editFrom = null;
+  function drawEdit() {
+    if (!editId) return;
+    const s = stories.find((x) => x.id === editId);
+    if (!s) { closeEdit(); return; }
+    const i = editSeq.indexOf(editId);
+    $('editAt').textContent = i >= 0 ? (i + 1) + ' / ' + editSeq.length : '';
+    $('editPrev').disabled = i <= 0;
+    $('editNext').disabled = i < 0 || i >= editSeq.length - 1;
+    const body = $('editBody');
+    const top = body.scrollTop;
+    body.innerHTML = formHTML(s);
+    body.scrollTop = top;
+  }
+  function openEdit(id, from) {
+    editId = id;
+    editSeq = visible().map((s) => s.id);
+    editFrom = from || null;
+    armedDelete = null;
+    $('edit').hidden = false;
+    document.documentElement.style.overflow = 'hidden';
+    drawEdit();
+    $('editBody').scrollTop = 0;
+    $('edit').focus({ preventScroll: true });
+  }
+  function closeEdit() {
+    if ($('edit').hidden) return;
+    const id = editId;
+    editId = null;
+    armedDelete = null;
+    $('edit').hidden = true;
+    document.documentElement.style.overflow = '';
+    const back = (id && $('list').querySelector('.a-tile[data-id="' + id + '"]')) || editFrom;
+    if (back && back.focus) back.focus({ preventScroll: true });
+  }
+  function stepEdit(d) {
+    const i = editSeq.indexOf(editId) + d;
+    if (i < 0 || i >= editSeq.length) return;
+    editId = editSeq[i];
+    armedDelete = null;
+    drawEdit();
+    $('editBody').scrollTop = 0;
+  }
+  $('editPrev').addEventListener('click', () => stepEdit(-1));
+  $('editNext').addEventListener('click', () => stepEdit(1));
+  $('editClose').addEventListener('click', closeEdit);
+  $('editDim').addEventListener('click', closeEdit);
+  document.addEventListener('keydown', (e) => {
+    if ($('edit').hidden) return;
+    if (e.key === 'Escape') { closeEdit(); return; }
+    if (e.target.closest && e.target.closest('input, textarea')) return;
+    if (e.key === 'ArrowLeft') stepEdit(-1);
+    else if (e.key === 'ArrowRight') stepEdit(1);
+  });
+  $('list').addEventListener('click', (e) => {
+    const t = e.target.closest('.a-tile');
+    if (!t) return;
+    const id = t.dataset.id;
+    if (!selecting) { openEdit(id, t); return; }
+    if (sel.has(id)) sel.delete(id); else sel.add(id);
+    armedBulk = false;
+    const on = sel.has(id);
+    t.classList.toggle('is-sel', on);
+    t.setAttribute('aria-pressed', String(on));
+    t.querySelector('.a-chk').textContent = on ? '✓' : '';
+    drawSelBar();
+  });
 
   function drawSelBar() {
     // only stories in the current tab can stay selected
@@ -429,37 +520,30 @@
       await update(s, { link: v || null });
       input.value = s.link || '';
       say(s.link ? '링크를 저장했어요' : '링크를 지웠어요');
+      // the picture grid behind shows the change; the form being typed in is left alone
+      const tile = $('list').querySelector('.a-tile[data-id="' + s.id + '"]');
+      if (tile) tile.outerHTML = tileHTML(s);
       drawCats();
       drawSelBar();
+      $('cntNolink').textContent = stories.filter((x) => !x.hidden && !x.link && x.status !== 'pending').length;
     } catch (err) {
       say(err.message);
     }
   }
-  $('list').addEventListener('paste', (e) => {
+  $('edit').addEventListener('paste', (e) => {
     const input = e.target.closest('input[data-link]');
     if (input) setTimeout(() => saveRowLink(input), 0);
   });
-  $('list').addEventListener('keydown', (e) => {
+  $('edit').addEventListener('keydown', (e) => {
     const input = e.target.closest('input[data-link]');
     if (input && e.key === 'Enter') { e.preventDefault(); input.blur(); }
   });
-  $('list').addEventListener('focusout', (e) => {
+  $('edit').addEventListener('focusout', (e) => {
     const input = e.target.closest('input[data-link]');
     if (input) saveRowLink(input);
   });
 
-  $('list').addEventListener('change', (e) => {
-    const box = e.target.closest('input[data-sel]');
-    if (!box) return;
-    const id = box.closest('.reg-row').dataset.id;
-    if (box.checked) sel.add(id);
-    else sel.delete(id);
-    box.closest('.reg-row').classList.toggle('is-sel', box.checked);
-    armedBulk = false;
-    drawSelBar();
-  });
-
-  $('list').addEventListener('click', async (e) => {
+  $('edit').addEventListener('click', async (e) => {
     const row = e.target.closest('.reg-row');
     if (!row || e.target.closest('.reg-sel')) return;
     const s = stories.find((x) => x.id === row.dataset.id);
@@ -513,6 +597,11 @@
         await api('/api/admin/stories/' + encodeURIComponent(s.id), { method: 'DELETE' });
         armedDelete = null;
         stories = stories.filter((x) => x.id !== s.id);
+        // carry on with the next story, or close after the last one
+        const at = editSeq.indexOf(s.id);
+        editSeq = editSeq.filter((x) => x !== s.id);
+        editId = editSeq.length ? editSeq[Math.min(at, editSeq.length - 1)] : null;
+        if (!editId) { $('edit').hidden = true; document.documentElement.style.overflow = ''; }
         render();
         say('삭제했어요');
       }
