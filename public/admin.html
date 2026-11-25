@@ -196,6 +196,8 @@ body.admin .app { max-width: 1320px; }
   .filters > .row, .filters > .selbar { flex: none; padding-top: 0; }
   .filters > .row + .row, .filters > .selbar { padding-left: 10px; border-left: 1px solid var(--line-2); }
 }
+/* the link box takes the whole row */
+.tools > section:last-child { grid-column: 1 / -1; }
 </style>
 </head>
 <body class="admin">
