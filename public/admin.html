@@ -215,6 +215,26 @@ body.admin .app { max-width: 1320px; }
   .tools { grid-template-columns: minmax(0, 1fr) 320px; }
   .reg-box textarea { min-height: 150px; }
 }
+/* the edit window on a computer: larger type and buttons, the form fills the height beside the picture */
+@media (min-width: 641px) {
+  .edit-b { padding: 24px; }
+  .edit .reg-row { align-items: stretch; gap: 28px; }
+  .edit .reg-b { gap: 6px; }
+  .edit .reg-n { gap: 10px; }
+  .edit .reg-n b { font-size: 26px; line-height: 1.25; }
+  .edit .reg-n .badge { height: 26px; padding: 0 10px; border-radius: 13px; font-size: 13px; }
+  .edit .reg-m, .edit .reg-stat { font-size: 15px; line-height: 1.5; }
+  .edit .rule { font-size: 14px; }
+  .edit h3 { margin-top: 24px; font-size: 14px; }
+  .edit .reg-c, .edit .reg-mk { gap: 0 6px; }
+  .edit .reg-c button, .edit .mk-btn { height: 52px; }
+  .edit .reg-c button > span, .edit .mk-btn > span { height: 44px; padding: 0 16px; border-radius: 22px; font-size: 16px; }
+  .edit .reg-l { margin-top: 4px; }
+  .edit .reg-l input { height: 56px !important; font-size: 16px !important; padding: 0 16px; }
+  .edit-acts { margin-top: auto; padding-top: 16px; justify-content: space-between; }
+  .edit-acts .pill { height: 52px; }
+  .edit-acts .pill > span { height: 44px; padding: 0 22px; border-radius: 22px; font-size: 15px; }
+}
 </style>
 </head>
 <body class="admin">
