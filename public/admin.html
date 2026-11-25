@@ -194,7 +194,11 @@ body.admin .app { max-width: 1320px; }
 @media (min-width: 900px) {
   .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 0 10px; }
   .filters > .row, .filters > .selbar { flex: none; padding-top: 0; }
-  .filters > .row + .row, .filters > .selbar { padding-left: 10px; border-left: 1px solid var(--line-2); }
+  .filters > .row + .row { padding-left: 10px; border-left: 1px solid var(--line-2); }
+  /* the select button keeps its place; its extra buttons simply follow it */
+  .filters > .selbar, .filters .selbar-on { display: contents; }
+  .filters .selbar-on[hidden] { display: none; }
+  #selToggle { padding-left: 10px; border-left: 1px solid var(--line-2); }
 }
 /* one box for adding stories: photos first, then their links; status and profile sit beside it */
 .tools-side { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
@@ -377,6 +381,6 @@ body.admin .app { max-width: 1320px; }
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795611712"></script>
+<script src="/admin.js?v=1795612329"></script>
 </body>
 </html>

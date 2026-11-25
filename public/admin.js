@@ -216,9 +216,9 @@
     // only stories in the current tab can stay selected
     const ids = new Set(visible().map((s) => s.id));
     sel.forEach((id) => { if (!ids.has(id)) sel.delete(id); });
-    $('selToggle').querySelector('span').textContent = selecting ? '선택 끝' : '선택';
+    $('selToggle').querySelector('span').textContent = selecting ? '선택 해제' : '선택';
     $('selTools').hidden = !selecting;
-    $('selAll').querySelector('span').textContent = sel.size && sel.size === ids.size ? '전체 해제' : '전체 선택 (' + ids.size + ')';
+    $('selAll').querySelector('span').textContent = sel.size && sel.size === ids.size ? '전체 선택 풀기' : '전체 선택 (' + ids.size + ')';
     $('selDelete').disabled = !sel.size;
     $('selDelete').querySelector('span').textContent = !sel.size ? '선택 삭제' : (armedBulk ? '한 번 더 누르면 ' + sel.size + '개 삭제' : '선택 삭제 (' + sel.size + ')');
   }
