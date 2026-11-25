@@ -1007,30 +1007,19 @@ a.cta {
   color: #1a84ff;
 }
 
-/* a story with a link: the button gets its own strip at the bottom and the story sits above it,
-   shown whole so nothing (prices included) is covered or cut */
-.viewer.has-link {
-  display: flex;
-  flex-direction: column;
-}
-.viewer.has-link .v-stage {
-  position: relative;
-  inset: auto;
-  flex: 1 1 0;
-  min-height: 0;
-  width: 100%;
-}
+/* a story with a link: the picture is shown whole from the top of the screen, and the button
+   sits on the plain bottom part of the picture (placed by placeCta in app.js) */
 .viewer.has-link .card.v-card img {
   object-fit: contain;
   object-position: center top;
 }
 .viewer.has-link .v-bottom {
-  position: static;
-  flex: none;
-  box-sizing: border-box;
-  width: 100%;
-  padding: 10px max(12px, env(safe-area-inset-right, 0px)) calc(env(safe-area-inset-bottom, 0px) + 10px) max(12px, env(safe-area-inset-left, 0px));
+  bottom: max(calc(env(safe-area-inset-bottom, 0px) + 12px), var(--cta-bottom, 0px));
+  padding: 0 12px;
   background: none;
+}
+.viewer.has-link .v-bar {
+  width: min(100%, var(--cta-w, 440px));
 }
 
 /* the product button: a small pill in the header, beside the close button */
@@ -1370,4 +1359,49 @@ body {
   background: none;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
+}
+
+/* no zooming by pinch or double tap */
+html {
+  touch-action: pan-x pan-y;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+/* light / dark switch at the right end of the header */
+.theme-btn {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  margin-right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--fg);
+}
+.theme-btn svg {
+  width: 20px;
+  height: 20px;
+  box-sizing: content-box;
+  padding: 8px;
+  border-radius: 50%;
+  border: 1px solid var(--line-2);
+  background: var(--raise);
+}
+.theme-btn .i-sun,
+.theme-btn.is-dark .i-moon {
+  display: none;
+}
+.theme-btn.is-dark .i-sun {
+  display: block;
+}
+
+/* the order switch at the right end of a category's heading */
+.order-pill > span {
+  gap: 5px;
+  padding: 0 12px 0 10px;
+}
+.order-pill svg {
+  width: 15px;
+  height: 15px;
 }

@@ -85,8 +85,12 @@
   const feed = $('feed');
   const tabsEl = document.querySelector('.tabs');
   const tabsList = $('tabsList');
-  const startTab = (location.hash.match(/^#(top|bottom|outer|shoes|acc|etc)$/) || [])[1];
-  let tab = startTab || 'all';
+  // the site always opens on 전체; an old link that ends in a category name opens there too
+  let tab = 'all';
+  if (/^#(top|bottom|outer|shoes|acc|etc)$/.test(location.hash)) {
+    try { history.replaceState(null, '', location.pathname); } catch (e) { /* not allowed in some frames */ }
+  }
+  const ORDER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4v16"/><path d="M3 16l4 4 4-4"/><path d="M17 20V4"/><path d="M13 8l4-4 4 4"/></svg>';
 
   function renderTabs() {
     let html = '<button type="button" class="pill chip" data-tab="all" aria-pressed="' + (tab === 'all') + '"><span>전체<small>' + STORIES.length + '</small></span></button>';
@@ -109,10 +113,9 @@
   const marksLabel = (s) => (s.timeSale ? ', 타임세일' : '') + (s.saleState === 'soldout' ? ', 품절' : s.saleState === 'expired' ? ', 기간만료' : '');
 
   function tileHTML(s) {
-    const label = CAT_LABEL[s.cat] + (s.itemName ? ', ' + s.itemName : '') + marksLabel(s) + ', ' + s.md + ' ' + s.clock + ' 스토리 열기';
+    const label = CAT_LABEL[s.cat] + (s.itemName ? ', ' + s.itemName : '') + marksLabel(s) + ', 스토리 열기';
     return '<button type="button" class="tile" data-id="' + esc(s.id) + '" aria-label="' + esc(label) + '">' +
-      '<div class="card"><img src="' + esc(s.imageUrl) + '" alt="" loading="lazy" decoding="async">' + marksHTML(s) + '</div>' +
-      '<span class="tile-t"><span>' + s.rel + '</span>' + (s.isNew ? '<span class="new">NEW</span>' : '') + '</span></button>';
+      '<div class="card"><img src="' + esc(s.imageUrl) + '" alt="" loading="lazy" decoding="async">' + marksHTML(s) + '</div></button>';
   }
   function renderFeed() {
     let html = '';
@@ -126,11 +129,11 @@
         if (!list.length) return;
         html += '<section><div class="sec-h gut"><div class="sec-t"><h2>' + c[1] + '</h2><span>' + list.length + '개</span></div>' +
           '<button type="button" class="pill more-btn" data-tab="' + c[0] + '" aria-label="' + c[1] + ' 전체 보기"><span>전체 보기' + CHEV_ICON + '</span></button></div>' +
-          '<div class="grid">' + list.slice(0, 6).map(tileHTML).join('') + '</div></section>';
+          '<div class="grid">' + list.slice(0, 9).map(tileHTML).join('') + '</div></section>';
       });
     } else {
       const list = listOf(tab);
-      html = '<section><div class="sec-h gut"><div class="sec-t"><h2>' + CAT_LABEL[tab] + '</h2><span>' + list.length + '개</span></div><span class="sort">' + (oldestFirst ? '오래된순' : '최신순') + '</span></div>' +
+      html = '<section><div class="sec-h gut"><div class="sec-t"><h2>' + CAT_LABEL[tab] + '</h2><span>' + list.length + '개</span></div><button type="button" class="pill order-pill" aria-label="정렬: ' + (oldestFirst ? '오래된순' : '최신순') + '. 눌러서 바꾸기"><span>' + ORDER_ICON + (oldestFirst ? '오래된순' : '최신순') + '</span></button></div>' +
         (list.length ? '<div class="grid">' + list.map(tileHTML).join('') + '</div>' : '<p class="empty gut">아직 이 카테고리에 올라온 스토리가 없어요.</p>') +
         '</section>';
     }
@@ -140,7 +143,6 @@
     tab = next;
     renderTabs();
     renderFeed();
-    try { history.replaceState(null, '', next === 'all' ? location.pathname : '#' + next); } catch (e) { /* not allowed in some frames */ }
     if (!keepScroll) {
       const y = $('tabsAnchor').getBoundingClientRect().top + window.scrollY - (parseFloat(getComputedStyle(tabsEl).top) || 0);
       if (window.scrollY > y) window.scrollTo({ top: Math.max(0, y), behavior: 'auto' });
@@ -164,17 +166,6 @@
     const ago = diff < 1 ? '방금 전' : (diff < 60 ? diff + '분 전' : (diff < 1440 ? Math.floor(diff / 60) + '시간 전' : Math.floor(diff / 1440) + '일 전'));
     $('statusText').textContent = ago + ' 업데이트 · 지난 꿀템도 전부 볼 수 있어요';
   }
-
-  function drawOrder() {
-    $('orderLabel').textContent = oldestFirst ? '오래된순' : '최신순';
-    $('orderBtn').setAttribute('aria-label', '정렬: ' + (oldestFirst ? '오래된순' : '최신순') + '. 눌러서 바꾸기');
-  }
-  drawOrder();
-  $('orderBtn').addEventListener('click', () => {
-    oldestFirst = !oldestFirst;
-    drawOrder();
-    renderFeed();
-  });
 
   // On a computer the category bar scrolls sideways by dragging with the mouse (a phone already
   // swipes it), and the mouse wheel scrolls it sideways too. A drag does not count as a click.
@@ -252,8 +243,8 @@
     }
     vSegs.innerHTML = segs;
     fill = vSegs.children[at] ? vSegs.children[at].firstChild : null;
-    $('vTime').textContent = s.md + ' ' + s.clock;
     placeHot();
+    placeCta();
     vCta.hidden = !s.link;
     // no link: nothing at all over the bottom of the story, not even the shading
     document.querySelector('.v-bottom').hidden = !s.link;
@@ -262,12 +253,6 @@
     // load the next picture early so tapping on feels instant
     if (seq[pos + 1]) { const pre = new Image(); pre.src = seq[pos + 1].imageUrl; }
     elapsed = 0;
-    if (flag) {
-      vFlag.textContent = s.full;
-      vFlag.classList.remove('go');
-      void vFlag.offsetWidth;
-      vFlag.classList.add('go');
-    }
   }
   // Puts the button exactly over the link sticker. The picture covers the card (object-fit: cover),
   // so the sticker's place in the picture is converted to its place on screen.
@@ -297,8 +282,47 @@
     vHot.href = s.link;
     vHot.hidden = false;
   }
-  vImg.addEventListener('load', placeHot);
-  window.addEventListener('resize', () => { if (!viewer.hidden) placeHot(); });
+  // The product button sits on the bottom of the picture itself (stories keep that part plain),
+  // never floating in the black under it. The picture is shown whole, from the top of the screen.
+  function placeCta() {
+    if (!vImg.naturalWidth) { viewer.style.removeProperty('--cta-bottom'); viewer.style.removeProperty('--cta-w'); return; }
+    const W = vCard.clientWidth;
+    const H = vCard.clientHeight;
+    const scale = Math.min(W / vImg.naturalWidth, H / vImg.naturalHeight);
+    const iw = vImg.naturalWidth * scale;
+    const ih = vImg.naturalHeight * scale;
+    const gap = Math.max(14, Math.round(ih * 0.05));
+    viewer.style.setProperty('--cta-bottom', Math.max(0, viewer.clientHeight - ih) + gap + 'px');
+    viewer.style.setProperty('--cta-w', Math.max(200, Math.min(iw - 28, 440)) + 'px');
+  }
+  vImg.addEventListener('load', () => { placeHot(); placeCta(); });
+  window.addEventListener('resize', () => { if (!viewer.hidden) { placeHot(); placeCta(); } });
+
+  // ---- light / dark switch (remembered on this phone) ----
+  const themeBtn = $('themeBtn');
+  const isDark = () => {
+    const t = document.documentElement.getAttribute('data-theme');
+    if (t) return t === 'dark';
+    return !(window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches);
+  };
+  function drawTheme() {
+    const d = isDark();
+    themeBtn.classList.toggle('is-dark', d);
+    themeBtn.setAttribute('aria-label', d ? '라이트 모드로 바꾸기' : '다크 모드로 바꾸기');
+  }
+  drawTheme();
+  themeBtn.addEventListener('click', () => {
+    const next = isDark() ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', next);
+    try { localStorage.setItem('honey-theme', next); } catch (e) { /* storage blocked */ }
+    drawTheme();
+  });
+
+  // ---- no zooming: pinch, double tap, ctrl + wheel ----
+  ['gesturestart', 'gesturechange', 'gestureend'].forEach((n) => document.addEventListener(n, (e) => e.preventDefault(), { passive: false }));
+  document.addEventListener('touchmove', (e) => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+  document.addEventListener('wheel', (e) => { if (e.ctrlKey) e.preventDefault(); }, { passive: false });
+  document.addEventListener('dblclick', (e) => e.preventDefault());
 
   function frame(ts) {
     raf = requestAnimationFrame(frame);
@@ -373,7 +397,13 @@
       return;
     }
     const more = e.target.closest('.more-btn');
-    if (more) setTab(more.dataset.tab);
+    if (more) { setTab(more.dataset.tab); return; }
+    if (e.target.closest('.order-pill')) {
+      oldestFirst = !oldestFirst;
+      renderFeed();
+      const b = feed.querySelector('.order-pill');
+      if (b) b.focus({ preventScroll: true });
+    }
   });
 
   // Touch and mouse: tap left/right, hold to pause, swipe sideways for another day, drag down to close.
