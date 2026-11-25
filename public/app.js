@@ -46,10 +46,18 @@
   // oldest first every time the site opens; the switch only changes it until the page is reloaded
   let oldestFirst = true;
   try { localStorage.removeItem('honey-order'); } catch (e) { /* storage blocked */ }
+  // Stars: each visitor marks the items they want up front. Kept on their own phone only,
+  // in the order they were starred; starred items lead their category.
+  let favs = [];
+  try { const f = JSON.parse(localStorage.getItem('honey-favs') || '[]'); if (Array.isArray(f)) favs = f.filter((x) => typeof x === 'string'); } catch (e) { /* storage blocked */ }
+  const saveFavs = () => { try { localStorage.setItem('honey-favs', JSON.stringify(favs)); } catch (e) { /* storage blocked */ } };
   const listOf = (cat) => {
     const l = STORIES.filter((s) => s.cat === cat);
-    return oldestFirst ? l.reverse() : l;
+    if (oldestFirst) l.reverse();
+    const up = l.filter((s) => favs.includes(s.id)).sort((a, b) => favs.indexOf(a.id) - favs.indexOf(b.id));
+    return up.length ? up.concat(l.filter((s) => !favs.includes(s.id))) : l;
   };
+  const STAR_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3.2l2.7 5.6 6.1.8-4.5 4.2 1.2 6-5.5-3-5.5 3 1.2-6L3.2 9.6l6.1-.8z"/></svg>';
 
   async function load() {
     const res = await fetch('/api/stories', { cache: 'no-store' });
@@ -114,8 +122,10 @@
 
   function tileHTML(s) {
     const label = CAT_LABEL[s.cat] + (s.itemName ? ', ' + s.itemName : '') + marksLabel(s) + ', 스토리 열기';
-    return '<button type="button" class="tile" data-id="' + esc(s.id) + '" aria-label="' + esc(label) + '">' +
-      '<div class="card"><img src="' + esc(s.imageUrl) + '" alt="" loading="lazy" decoding="async">' + marksHTML(s) + '</div></button>';
+    const on = favs.includes(s.id);
+    return '<div class="cell"><button type="button" class="fav" data-fav="' + esc(s.id) + '" aria-pressed="' + on + '" aria-label="' + esc((s.itemName || CAT_LABEL[s.cat]) + (on ? ' 맨 앞 고정 풀기' : ' 맨 앞에 고정')) + '">' + STAR_ICON + '</button>' +
+      '<button type="button" class="tile" data-id="' + esc(s.id) + '" aria-label="' + esc(label) + '">' +
+      '<div class="card"><img src="' + esc(s.imageUrl) + '" alt="" loading="lazy" decoding="async">' + marksHTML(s) + '</div></button></div>';
   }
   function renderFeed() {
     let html = '';
@@ -389,6 +399,18 @@
   }
 
   feed.addEventListener('click', (e) => {
+    const fav = e.target.closest('.fav');
+    if (fav) {
+      const id = fav.dataset.fav;
+      const i = favs.indexOf(id);
+      if (i >= 0) favs.splice(i, 1); else favs.push(id);
+      saveFavs();
+      renderFeed();
+      say(i >= 0 ? '고정을 풀었어요' : '맨 앞에 고정했어요');
+      const again = feed.querySelector('.fav[data-fav="' + id + '"]');
+      if (again) again.focus({ preventScroll: true });
+      return;
+    }
     const tile = e.target.closest('.tile');
     if (tile) {
       const s = byId[tile.dataset.id];
