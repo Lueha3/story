@@ -4,6 +4,8 @@ import { unifyTerms } from "@/lib/terms";
 import { getStore } from "@/lib/store";
 import { isCategory, type Story } from "@/lib/types";
 
+const MAX_PINNED = 12;
+
 export const dynamic = "force-dynamic";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -45,6 +47,15 @@ export async function PATCH(req: Request, ctx: Ctx) {
   if ("itemName" in body && typeof body.itemName === "string") patch.itemName = unifyTerms(body.itemName).slice(0, 80);
 
   const store = await getStore();
+  // only so many stories can be 대표 at once
+  if (patch.pinnedAt) {
+    const all = await store.listStories();
+    const mine = all.find((s) => s.id === id);
+    if (mine?.pinnedAt) delete patch.pinnedAt;
+    else if (all.filter((s) => s.pinnedAt).length >= MAX_PINNED) {
+      return Response.json({ error: `대표는 ${MAX_PINNED}개까지 지정할 수 있어요. 다른 대표를 먼저 빼주세요.` }, { status: 400 });
+    }
+  }
   const story = await store.updateStory(id, patch);
   if (!story) return Response.json({ error: "스토리를 찾지 못했어요." }, { status: 404 });
   return Response.json({ story });

@@ -81,7 +81,7 @@
     $('cntNolink').textContent = stories.filter((s) => !s.hidden && !s.link && s.status !== 'pending').length;
     $('cntAll').textContent = stories.length;
     $('cntHidden').textContent = stories.filter((s) => s.hidden).length;
-    $('cntPin').textContent = stories.filter((s) => s.pinnedAt).length;
+    $('cntPin').textContent = stories.filter((s) => s.pinnedAt).length + '/12';
     document.querySelectorAll('[data-f]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.f === filter)));
     drawCats();
     drawSelBar();
