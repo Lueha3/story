@@ -235,6 +235,9 @@ body.admin .app { max-width: 1320px; }
   .edit-acts .pill { height: 52px; }
   .edit-acts .pill > span { height: 44px; padding: 0 22px; border-radius: 22px; font-size: 15px; }
 }
+.bad-tab > span { border-color: #d0354f; color: #d0354f; }
+.bad-tab[aria-pressed="true"] > span { background: #d0354f; border-color: #d0354f; color: #ffffff; }
+.bad-link { color: #d0354f; font-weight: 700; }
 </style>
 </head>
 <body class="admin">
@@ -351,6 +354,7 @@ body.admin .app { max-width: 1320px; }
             <button type="button" class="pill chip" data-f="nolink" aria-pressed="false"><span>링크 없음<small id="cntNolink">0</small></span></button>
             <button type="button" class="pill chip" data-f="hidden" aria-pressed="false"><span>숨김<small id="cntHidden">0</small></span></button>
             <button type="button" class="pill chip" data-f="pin" aria-pressed="false"><span>★ 대표<small id="cntPin">0</small></span></button>
+            <button type="button" class="pill chip bad-tab" id="badTab" data-f="badlink" aria-pressed="false" hidden><span>잘못된 링크<small id="cntBad">0</small></span></button>
           </div>
           <div class="row cat-row" role="group" aria-label="카테고리" id="catRow"></div>
           <div class="row">
@@ -401,6 +405,6 @@ body.admin .app { max-width: 1320px; }
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
-<script src="/admin.js?v=1795612849"></script>
+<script src="/admin.js?v=1795676922"></script>
 </body>
 </html>

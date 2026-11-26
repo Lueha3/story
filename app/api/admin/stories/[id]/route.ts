@@ -1,5 +1,5 @@
 import { isOwner, unauthorized } from "@/lib/auth";
-import { cleanUrl } from "@/lib/stories";
+import { CURATOR_ONLY, cleanUrl, isCuratorLink } from "@/lib/stories";
 import { unifyTerms } from "@/lib/terms";
 import { getStore } from "@/lib/store";
 import { isCategory, type Story } from "@/lib/types";
@@ -31,6 +31,7 @@ export async function PATCH(req: Request, ctx: Ctx) {
     else {
       const url = cleanUrl(body.link);
       if (!url) return Response.json({ error: "링크 형식이 맞지 않아요." }, { status: 400 });
+      if (!isCuratorLink(url)) return Response.json({ error: CURATOR_ONLY }, { status: 400 });
       patch.link = url;
     }
   }

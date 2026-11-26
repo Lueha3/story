@@ -1,5 +1,5 @@
 import { isOwner, unauthorized } from "@/lib/auth";
-import { cleanUrl } from "@/lib/stories";
+import { CURATOR_ONLY, cleanUrl, isCuratorLink } from "@/lib/stories";
 import { getStore } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,7 @@ export async function POST(req: Request) {
     const id = p && typeof p === "object" && typeof (p as { id?: unknown }).id === "string" ? (p as { id: string }).id : null;
     const link = cleanUrl(p && typeof p === "object" ? (p as { link?: unknown }).link : null);
     if (!id || !link) return Response.json({ error: "링크 형식이 맞지 않는 줄이 있어요." }, { status: 400 });
+    if (!isCuratorLink(link)) return Response.json({ error: CURATOR_ONLY + " 아닌 링크: " + link }, { status: 400 });
     clean.push({ id, link });
   }
   const store = await getStore();

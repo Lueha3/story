@@ -190,6 +190,17 @@ export function cleanUrl(raw: unknown): string | null {
   }
 }
 
+/** Only Musinsa curator links earn the owner a share, so they are the only product links taken. */
+export function isCuratorLink(url: string): boolean {
+  try {
+    const u = new URL(url);
+    return /^(www\.)?musinsa\.com$/i.test(u.hostname) && /^\/curator\/goods\/[^/]+/.test(u.pathname);
+  } catch {
+    return false;
+  }
+}
+export const CURATOR_ONLY = "무신사 큐레이터 링크(www.musinsa.com/curator/goods/...)만 넣을 수 있어요.";
+
 /** Finds the link sticker for stories saved before that was read. Returns how many were handled and how many remain. */
 export async function locateStickers(limit: number): Promise<{ done: number; found: number; left: number }> {
   const store = await getStore();

@@ -49,6 +49,7 @@
     if (filter === 'check') return stories.filter((s) => !s.hidden && (!s.sure || s.status === 'failed'));
     if (filter === 'nolink') return stories.filter((s) => !s.hidden && !s.link && s.status !== 'pending');
     if (filter === 'hidden') return stories.filter((s) => s.hidden);
+    if (filter === 'badlink') return stories.filter(badLink);
     if (filter === 'pin') return stories.filter((s) => s.pinnedAt).sort((a, b) => Date.parse(a.pinnedAt) - Date.parse(b.pinnedAt));
     return stories;
   }
@@ -81,6 +82,8 @@
     $('cntNolink').textContent = stories.filter((s) => !s.hidden && !s.link && s.status !== 'pending').length;
     $('cntAll').textContent = stories.length;
     $('cntHidden').textContent = stories.filter((s) => s.hidden).length;
+    $('cntBad').textContent = stories.filter(badLink).length;
+    $('badTab').hidden = !stories.some(badLink) && filter !== 'badlink';
     $('cntPin').textContent = stories.filter((s) => s.pinnedAt).length + '/12';
     document.querySelectorAll('[data-f]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.f === filter)));
     drawCats();
@@ -104,6 +107,7 @@
     else if (s.status === 'failed') tags += '<i class="t-warn">분류 실패</i>';
     else if (!s.sure) tags += '<i class="t-warn">확인 필요</i>';
     if (!s.link && s.status !== 'pending') tags += '<i class="t-bad">링크 없음</i>';
+    if (badLink(s)) tags += '<i class="t-bad">잘못된 링크</i>';
     const on = sel.has(s.id);
     return '<button type="button" class="a-tile' + (s.hidden ? ' is-hidden' : '') + (on ? ' is-sel' : '') + '" data-id="' + esc(s.id) + '"' + (selecting ? ' aria-pressed="' + on + '"' : '') +
       ' aria-label="' + esc((s.itemName || '이름 없음') + (selecting ? ' 선택' : ' 관리하기')) + '">' +
@@ -124,6 +128,7 @@
       '<span class="reg-m">' + when(s.takenAt) + (s.priceText ? ' · ' + esc(s.priceText) : '') + '</span>' +
       (lastPer ? '<span class="reg-stat">30일 조회 ' + ((lastPer[s.id] || {}).views || 0) + ' · 클릭 ' + ((lastPer[s.id] || {}).clicks || 0) + '</span>' : '') +
       (note ? '<span class="rule">' + esc(note) + '</span>' : '') +
+      (badLink(s) ? '<span class="rule bad-link">큐레이터 링크가 아니라서 수익이 안 생겨요. 아래 링크를 큐레이터 링크로 바꿔주세요.</span>' : '') +
       '<h3>카테고리</h3><div class="reg-c" role="group" aria-label="카테고리">' +
       CATS.map((c) => '<button type="button" data-cat="' + c[0] + '" aria-pressed="' + (s.category === c[0]) + '"><span>' + c[1] + '</span></button>').join('') +
       '</div>' +
@@ -331,6 +336,16 @@
   // Reads every link from pasted text in order, each with the line of text above it as a hint,
   // and pairs them with the stories in the list as shown (top to bottom).
   let bulkPairs = [];
+  // only Musinsa curator links earn money; anything else is flagged and never saved
+  const isCurator = (u) => /^https?:\/\/(www\.)?musinsa\.com\/curator\/goods\/[^\s/]+/i.test(u || '');
+  const badLink = (s) => Boolean(s.link) && !isCurator(s.link);
+  // links pasted in the box that are not curator links: stop and say which lines
+  function checkPasted(links) {
+    const bad = links.filter((l) => !isCurator(l.url));
+    if (!bad.length) return true;
+    renderBulk('큐레이터 링크가 아닌 줄이 ' + bad.length + '개 있어요. 무신사 큐레이터 링크(www.musinsa.com/curator/goods/...)로 바꿔서 다시 넣어주세요.\n' + bad.map((l) => (l.hint ? l.hint + ' : ' : '') + l.url).join('\n'));
+    return false;
+  }
   function readLinks(text) {
     const out = [];
     let hint = '';
@@ -386,6 +401,7 @@
   // by the AI: it reads each story picture and the line above each link
   async function aiMatch() {
     const links = readLinks($('bulkText').value);
+    if (!checkPasted(links)) return;
     if (!links.length) { renderBulk('글에서 링크를 찾지 못했어요.'); return; }
     // candidates: every shown story still without a link, whatever tab or category is open
     const targets = stories.filter((s) => !s.hidden && !s.link);
@@ -428,6 +444,7 @@
   }
   $('bulkOrder').addEventListener('click', async () => {
     const links = readLinks($('bulkText').value);
+    if (!checkPasted(links)) return;
     if (!links.length) { renderBulk('글에서 링크를 찾지 못했어요.'); return; }
     // stories is already in upload order (oldest first)
     const targets = stories.filter((s) => !s.hidden && !s.link);
@@ -515,7 +532,7 @@
     if (!s) return;
     const v = input.value.trim();
     if ((s.link || '') === v) return;
-    if (v && !/^https?:\/\/\S+$/i.test(v) && !/https?:\/\//i.test(v)) { say('링크 형식이 아니에요. https:// 로 시작하는 주소를 넣어주세요.'); return; }
+    if (v && !isCurator(v)) { say('무신사 큐레이터 링크(www.musinsa.com/curator/goods/...)만 넣을 수 있어요.'); return; }
     try {
       await update(s, { link: v || null });
       input.value = s.link || '';

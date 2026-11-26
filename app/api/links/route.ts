@@ -1,5 +1,5 @@
 import { isOwner, unauthorized } from "@/lib/auth";
-import { addLink, cleanUrl } from "@/lib/stories";
+import { CURATOR_ONLY, addLink, cleanUrl, isCuratorLink } from "@/lib/stories";
 import { getStore } from "@/lib/store";
 
 export const dynamic = "force-dynamic";
@@ -20,6 +20,7 @@ export async function POST(req: Request) {
   }
   const url = cleanUrl(raw);
   if (!url) return Response.json({ error: "링크를 찾지 못했어요." }, { status: 400 });
+  if (!isCuratorLink(url)) return Response.json({ error: CURATOR_ONLY }, { status: 400 });
   const { link, story } = await addLink(url);
   return Response.json({
     url: link.url,
